@@ -8,3 +8,4 @@ jinja2==2.7
 flasgger==0.5.12
 good==0.0.7-0
 pyresttest==1.7.1
+passlib==1.6.1
