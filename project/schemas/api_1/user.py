@@ -1,3 +1,11 @@
 # -*- coding: utf-8 -*-
+__author__ = 'AminHP'
 
-from good import Schema, Required
+from good import Schema, All, Required, Length, Match, Email
+
+
+signup_schema = Schema({
+    Required('username'): All(unicode, Match(r'^[\w.]+$'), Length(max=32)),
+    Required('email'): Email(),
+    Required('password'): All(unicode, Length(min=3, max=32))
+})
