@@ -46,6 +46,8 @@ def signup():
     responses:
       201:
         description: Successfully registered
+        schema:
+          $ref: "#/definitions/api_1_user_info_get_UserInfo"
       400:
         description: Bad request
       409:
@@ -57,10 +59,9 @@ def signup():
         obj = User(username=json['username'], email=json['email'])
         obj.hash_password(json['password'])
         obj.save()
+        return jsonify(obj.to_json()), 201
     except db.NotUniqueError:
         return jsonify(error="Email or username already exists"), 409
-
-    return "", 201
 
 
 @app.api_route('login', methods=['POST'])
@@ -149,3 +150,43 @@ def logout():
 
     auth.expire_token()
     return '', 200
+
+
+@app.api_route('<string:userid>', methods=['GET'])
+def info(userid):
+    """
+    User Info
+    ---
+    tags:
+      - user
+    parameters:
+      - name: userid
+        in: path
+        type: string
+        required: true
+        description: Id of user
+    responses:
+      200:
+        description: User information
+        schema:
+          id: UserInfo
+          type: object
+          properties:
+            id:
+              type: string
+              description: User id
+            username:
+              type: string
+              description: Username
+            email:
+              type: string
+              description: Email
+      404:
+        description: User does not exist
+    """
+
+    try:
+        obj = User.objects().get(pk=userid)
+        return jsonify(obj.to_json()), 200
+    except db.DoesNotExist, db.ValidationError:
+        return jsonify(errors='User does not exist'), 404
