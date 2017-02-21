@@ -6,7 +6,7 @@ from flask import jsonify, request
 
 # project imports
 from project import app
-from project.extensions import db
+from project.extensions import db, auth
 from project.models.user import User
 
 
@@ -32,7 +32,7 @@ def signup():
           properties:
             username:
               type: string
-              pattern: ^[\w.]+$
+              pattern: ^[a-zA-Z0-9_]+$
               example: babyknight
               maxLength: 32
             email:
@@ -61,3 +61,66 @@ def signup():
         return jsonify(error="Email or username already exists"), 409
 
     return "", 201
+
+
+@app.api_route('login', methods=['POST'])
+@app.api_validate('user.login_schema')
+def login():
+    """
+    Login
+    ---
+    tags:
+      - user
+    parameters:
+      - name: body
+        in: body
+        description: username/email and password for login
+        required: true
+        schema:
+          id: UserLogin
+          required:
+            - login
+            - password
+          properties:
+            login:
+              type: string
+              example: babyknight
+              description: Username or Email
+            password:
+              type: string
+              example: baby123
+    responses:
+      200:
+        description: Successfully logged in
+        schema:
+          type: object
+          properties:
+            token:
+              type: string
+              description: Generated RESTful token
+      400:
+        description: Bad request
+      404:
+        description: User does not exist
+      406:
+        description: Wrong password
+    """
+
+    json = request.json
+    login = json['login']
+    password = json['password']
+
+    try:
+        if '@' in login:
+            obj = User.objects().get(email=login)
+        else:
+            obj = User.objects().get(username=login)
+
+        if obj.verify_password(password):
+            token = auth.generate_token(obj.pk)
+            return jsonify(token=token), 200
+        else:
+            return jsonify(errors='Wrong password'), 406
+
+    except db.DoesNotExist:
+        return jsonify(errors='User does not exist'), 404
