@@ -188,5 +188,5 @@ def info(userid):
     try:
         obj = User.objects().get(pk=userid)
         return jsonify(obj.to_json()), 200
-    except db.DoesNotExist, db.ValidationError:
+    except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='User does not exist'), 404
