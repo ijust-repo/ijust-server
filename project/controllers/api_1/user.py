@@ -124,3 +124,28 @@ def login():
 
     except db.DoesNotExist:
         return jsonify(errors='User does not exist'), 404
+
+
+@app.api_route('logout', methods=['POST'])
+@auth.authenticate
+def logout():
+    """
+    Logout
+    ---
+    tags:
+      - user
+    parameters:
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successfully logged out
+      401:
+        description: Token is invalid or has expired
+    """
+
+    auth.expire_token()
+    return '', 200
