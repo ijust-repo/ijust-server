@@ -69,6 +69,7 @@ def create():
         if len(owner.teams) > 5:
             return jsonify(errors="You can't create more teams"), 406
 
+        json['members'] = filter(lambda un: un != owner.username, json['members'])
         obj = Team(name=json['name'])
         obj.owner = owner
         obj.members = [User.objects().get(username=username) for username in json['members']]
@@ -215,6 +216,7 @@ def edit(teamid):
             obj.name = json['name']
 
         if 'members' in json:
+            json['members'] = filter(lambda un: un != obj.owner.username, json['members'])
             new_members = [User.objects().get(username=username) for username in json['members']]
 
             for m in obj.members:
