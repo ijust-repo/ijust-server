@@ -199,6 +199,8 @@ def info(userid):
                     name:
                       type: string
                       description: Team name
+      401:
+        description: Token is invalid or has expired
       404:
         description: User does not exist
     """
@@ -229,6 +231,8 @@ def myinfo():
         description: Currnt user information
         schema:
           $ref: "#/definitions/api_1_user_info_get_UserInfo"
+      401:
+        description: Token is invalid or has expired
       404:
         description: User does not exist
     """
