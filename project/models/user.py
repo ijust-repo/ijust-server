@@ -10,9 +10,9 @@ from project.extensions import db
 
 class User(db.Document):
     username = db.StringField(required=True, unique=True)
-    email = db.StringField(required=True, unique=True)
+    email = db.EmailField(required=True, unique=True)
     password = db.StringField(required=True)
-    #teams = db.ListField(ReferenceField('Team'))
+    teams = db.ListField(db.ReferenceField('Team', reverse_delete_rule=db.PULL))
 
 
     def hash_password(self, password):
@@ -36,5 +36,13 @@ class User(db.Document):
         return dict(
             id = str(self.pk),
             username = self.username,
-            email = self.email
+            email = self.email,
+            teams = [team.to_json_abs() for team in self.teams]
+        )
+
+
+    def to_json_abs(self):
+        return dict(
+            id = str(self.pk),
+            username = self.username
         )

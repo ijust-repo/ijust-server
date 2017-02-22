@@ -2,7 +2,7 @@
 __author__ = 'AminHP'
 
 # flask imports
-from flask import jsonify, request
+from flask import jsonify, request, g, redirect, url_for
 
 # project imports
 from project import app
@@ -153,6 +153,7 @@ def logout():
 
 
 @app.api_route('<string:userid>', methods=['GET'])
+@auth.authenticate
 def info(userid):
     """
     User Info
@@ -165,6 +166,11 @@ def info(userid):
         type: string
         required: true
         description: Id of user
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
     responses:
       200:
         description: User information
@@ -181,6 +187,18 @@ def info(userid):
             email:
               type: string
               description: Email
+            teams:
+              type: array
+              items:
+                schema:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Team id
+                    name:
+                      type: string
+                      description: Team name
       404:
         description: User does not exist
     """
@@ -190,3 +208,29 @@ def info(userid):
         return jsonify(obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='User does not exist'), 404
+
+
+@app.api_route('', methods=['GET'])
+@auth.authenticate
+def myinfo():
+    """
+    Current User Info
+    ---
+    tags:
+      - user
+    parameters:
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Currnt user information
+        schema:
+          $ref: "#/definitions/api_1_user_info_get_UserInfo"
+      404:
+        description: User does not exist
+    """
+
+    return redirect(url_for('api_1.user.info', userid=g.user_id))
