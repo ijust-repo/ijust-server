@@ -9,9 +9,24 @@ class Team(db.Document):
     name = db.StringField(required=True, unique=True)
     owner = db.ReferenceField('User', required=True)
     members = db.ListField(db.ReferenceField('User'))
-    #contests = db.ListField(db.ReferenceField('Contest'))
-    #pending_contests = db.ListField(db.ReferenceField('Contest'))
-    #rejected_contests = db.ListField(db.ReferenceField('Contest'))
+
+
+    def populate(self, json):
+        from project.models.user import User
+
+        if 'name' in json:
+            self.name = json['name']
+        if 'members' in json:
+            members = filter(lambda un: un != self.owner.username, json['members'])
+            members = [User.objects().get(username=username) for username in members]
+
+            for m in (self.members or []):
+                m.update(pull__teams=self)
+
+            self.members = members
+            for user in self.members:
+                user.teams.append(self)
+                user.save()
 
 
     def to_json(self):

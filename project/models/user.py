@@ -32,6 +32,13 @@ class User(db.Document):
         return False
 
 
+    def populate(self, json):
+        if 'username' in json:
+            self.username = json['username']
+        if 'email' in json:
+            self.email = json['email']
+
+
     def to_json(self):
         return dict(
             id = str(self.pk),

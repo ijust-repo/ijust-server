@@ -56,7 +56,8 @@ def signup():
 
     json = request.json
     try:
-        obj = User(username=json['username'], email=json['email'])
+        obj = User()
+        obj.populate(json)
         obj.hash_password(json['password'])
         obj.save()
         return jsonify(obj.to_json()), 201
@@ -152,16 +153,16 @@ def logout():
     return '', 200
 
 
-@app.api_route('<string:userid>', methods=['GET'])
+@app.api_route('<string:uid>', methods=['GET'])
 @auth.authenticate
-def info(userid):
+def info(uid):
     """
     User Info
     ---
     tags:
       - user
     parameters:
-      - name: userid
+      - name: uid
         in: path
         type: string
         required: true
@@ -206,7 +207,7 @@ def info(userid):
     """
 
     try:
-        obj = User.objects().get(pk=userid)
+        obj = User.objects().get(pk=uid)
         return jsonify(obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='User does not exist'), 404
@@ -237,4 +238,4 @@ def myinfo():
         description: User does not exist
     """
 
-    return redirect(url_for('api_1.user.info', userid=g.user_id))
+    return redirect(url_for('api_1.user.info', uid=g.user_id))

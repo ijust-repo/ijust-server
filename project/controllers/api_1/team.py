@@ -69,18 +69,14 @@ def create():
         if len(owner.teams) > 5:
             return jsonify(errors="You can't create more teams"), 406
 
-        json['members'] = filter(lambda un: un != owner.username, json['members'])
         obj = Team(name=json['name'])
         obj.owner = owner
-        obj.members = [User.objects().get(username=username) for username in json['members']]
+        obj.save()
+        obj.populate(json)
         obj.save()
 
         owner.teams.append(obj)
         owner.save()
-
-        for user in obj.members:
-            user.teams.append(obj)
-            user.save()
         return jsonify(obj.to_json()), 201
 
     except db.NotUniqueError:
@@ -89,16 +85,16 @@ def create():
         return jsonify(errors='Member does not exist'), 404
 
 
-@app.api_route('<string:teamid>', methods=['GET'])
+@app.api_route('<string:tid>', methods=['GET'])
 @auth.authenticate
-def info(teamid):
+def info(tid):
     """
     Team Info
     ---
     tags:
       - team
     parameters:
-      - name: teamid
+      - name: tid
         in: path
         type: string
         required: true
@@ -145,23 +141,23 @@ def info(teamid):
     """
 
     try:
-        obj = Team.objects().get(pk=teamid)
+        obj = Team.objects().get(pk=tid)
         return jsonify(obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='Team does not exist'), 404
 
 
-@app.api_route('<string:teamid>', methods=['PUT'])
+@app.api_route('<string:tid>', methods=['PUT'])
 @app.api_validate('team.edit_schema')
 @auth.authenticate
-def edit(teamid):
+def edit(tid):
     """
     Edit Team
     ---
     tags:
       - team
     parameters:
-      - name: teamid
+      - name: tid
         in: path
         type: string
         required: true
@@ -201,32 +197,18 @@ def edit(teamid):
       403:
         description: You are'nt owner of the team
       404:
-        description: Member does not exist
+        description: Team or Member does not exist
       409:
         description: Team name already exists
     """
 
     json = request.json
     try:
-        obj = Team.objects().get(pk=teamid)
+        obj = Team.objects().get(pk=tid)
         if str(obj.owner.pk) != g.user_id:
             return jsonify(errors="You are'nt owner of the team"), 403
 
-        if 'name' in json:
-            obj.name = json['name']
-
-        if 'members' in json:
-            json['members'] = filter(lambda un: un != obj.owner.username, json['members'])
-            new_members = [User.objects().get(username=username) for username in json['members']]
-
-            for m in obj.members:
-                m.update(pull__teams=obj)
-
-            obj.members = new_members
-            for user in obj.members:
-                user.teams.append(obj)
-                user.save()
-
+        obj.populate(json)
         obj.save()
         return jsonify(obj.to_json()), 200
 
