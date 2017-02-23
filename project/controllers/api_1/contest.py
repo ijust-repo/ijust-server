@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 __author__ = 'AminHP'
 
+# python imports
+import os
+import shutil
+import zipfile
+
 # flask imports
 from flask import jsonify, request, g
+from werkzeug.exceptions import RequestEntityTooLarge
 
 # project imports
 from project import app
@@ -10,6 +16,7 @@ from project.extensions import db, auth
 from project.models.contest import Problem, Contest, ContestDateTimeException
 from project.models.team import Team
 from project.models.user import User
+from project.forms.problem import UploadProblemBody, UploadTestCase
 
 
 @app.api_route('', methods=['POST'])
@@ -84,7 +91,7 @@ def create():
 @auth.authenticate
 def info(cid):
     """
-    Contest Info
+    Get Contest Info
     ---
     tags:
       - contest
@@ -342,7 +349,7 @@ def team_unjoin(cid):
 @auth.authenticate
 def team_list(cid):
     """
-    Team List
+    Team Get List
     ---
     tags:
       - contest
@@ -430,8 +437,6 @@ def team_accept(cid, tid):
     responses:
       200:
         description: Team Accepted
-      400:
-        description: Bad request
       401:
         description: Token is invalid or has expired
       403:
@@ -484,8 +489,6 @@ def team_reject(cid, tid):
     responses:
       200:
         description: Team Rejected
-      400:
-        description: Bad request
       401:
         description: Token is invalid or has expired
       403:
@@ -517,7 +520,7 @@ def team_reject(cid, tid):
 @auth.authenticate
 def problem_create(cid):
     """
-    Create Problem
+    Problem Create
     ---
     tags:
       - contest
@@ -592,7 +595,7 @@ def problem_create(cid):
 @auth.authenticate
 def problem_info(cid, pid):
     """
-    Problem Info
+    Problem Get Info
     ---
     tags:
       - contest
@@ -654,7 +657,7 @@ def problem_info(cid, pid):
 @auth.authenticate
 def problem_list(cid):
     """
-    Problem List
+    Problem Get List
     ---
     tags:
       - contest
@@ -712,7 +715,7 @@ def problem_list(cid):
 @auth.authenticate
 def problem_edit(cid, pid):
     """
-    Edit Problem
+    Problem Edit
     ---
     tags:
       - contest
@@ -822,6 +825,8 @@ def problem_change_order(cid):
         description: List of problems
         schema:
           $ref: "#/definitions/api_1_contest_problem_list_get_ContestProblemsList"
+      400:
+        description: Bad request
       401:
         description: Token is invalid or has expired
       403:
@@ -901,5 +906,137 @@ def problem_delete(cid, pid):
         problem_obj.delete()
         obj.reload()
         return jsonify(obj.to_json_problems()), 200
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Contest or problem does not exist'), 404
+
+
+@app.api_route('<string:cid>/problem/<string:pid>/body', methods=['POST'])
+@auth.authenticate
+def problem_upload_body(cid, pid):
+    """
+    Problem Upload Body File
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: pid
+        in: path
+        type: string
+        required: true
+        description: Id of problem
+      - name: body
+        in: formData
+        type: file
+        required: true
+        description: Problem body file (pdf) (max size is 4mb)
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successfully uploaded
+      400:
+        description: Bad request
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest or problem does not exist
+      413:
+        description: Request entity too large. (max is 4mg)
+    """
+
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return jsonify(errors="You aren't owner of the contest"), 403
+
+        form = UploadProblemBody()
+        if not form.validate():
+            return jsonify(errors="Bad file"), 400
+
+        problem_obj = Problem.objects().get(pk=pid)
+        file_obj = form.body.data
+        file_obj.save(problem_obj.body_addr)
+
+        return "", 200
+    except RequestEntityTooLarge:
+        return jsonify(errors='Request entity too large. (max is 4mg)'), 413
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Contest or problem does not exist'), 404
+
+
+@app.api_route('<string:cid>/problem/<string:pid>/testcase', methods=['POST'])
+@auth.authenticate
+def problem_upload_testcase(cid, pid):
+    """
+    Problem Upload Testcase File
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: pid
+        in: path
+        type: string
+        required: true
+        description: Id of problem
+      - name: testcase
+        in: formData
+        type: file
+        required: true
+        description: Problem testcase file (zip) (max size is 4mb)
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successfully uploaded
+      400:
+        description: Bad request
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest or problem does not exist
+      413:
+        description: Request entity too large. (max is 4mg)
+    """
+
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return jsonify(errors="You aren't owner of the contest"), 403
+
+        form = UploadTestCase()
+        if not form.validate():
+            return jsonify(errors="Bad file"), 400
+
+        problem_obj = Problem.objects().get(pk=pid)
+        if os.path.exists(problem_obj.testcase_dir):
+            shutil.rmtree(problem_obj.testcase_dir)
+
+        file_obj = form.testcase.data
+        with zipfile.ZipFile(file_obj) as zf:
+            zf.extractall(problem_obj.testcase_dir)
+
+        return "", 200
+    except RequestEntityTooLarge:
+        return jsonify(errors='Request entity too large. (max is 4mg)'), 413
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='Contest or problem does not exist'), 404

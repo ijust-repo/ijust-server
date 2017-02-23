@@ -86,7 +86,7 @@ def create():
 @auth.authenticate
 def info(tid):
     """
-    Team Info
+    Get Team Info
     ---
     tags:
       - team
@@ -220,7 +220,7 @@ def edit(tid):
 @auth.authenticate
 def list():
     """
-    My Teams
+    Get My Teams
     ---
     tags:
       - team

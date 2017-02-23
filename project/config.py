@@ -13,6 +13,7 @@ class DefaultConfig(object):
     DEBUG = True
     TESTING = True
     DEPLOYMENT = False
+    TRAP_HTTP_EXCEPTIONS = True
     TOKEN_EXPIRE_TIME = 5 * 3600
 
     # directory
@@ -24,6 +25,15 @@ class DefaultConfig(object):
     PROBLEM_DIR = os.path.join(MEDIA_DIR, 'Problems')
     TESTCASE_DIR = os.path.join(MEDIA_DIR, 'Testcases')
     SUBMISSION_DIR = os.path.join(MEDIA_DIR, 'Submissions')
+
+    # form
+
+    WTF_CSRF_ENABLED = False
+    CSRF_ENABLED = False
+
+    # upload
+
+    MAX_CONTENT_LENGTH = 4 * 1024 * 1024
 
     # cache
 

@@ -157,7 +157,7 @@ def logout():
 @auth.authenticate
 def info(uid):
     """
-    User Info
+    Get User Info
     ---
     tags:
       - user
@@ -205,7 +205,7 @@ def info(uid):
 @auth.authenticate
 def myinfo():
     """
-    Current User Info
+    Get Current User Info
     ---
     tags:
       - user

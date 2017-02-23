@@ -3,6 +3,7 @@ __author__ = 'AminHP'
 
 # python imports
 import os
+import shutil
 from time import time
 
 # project imports
@@ -16,7 +17,7 @@ class Problem(db.Document):
     space_limit = db.IntField(required=True)
 
     @property
-    def body_file(self):
+    def body_addr(self):
         return os.path.join(app.config['PROBLEM_DIR'], str(self.pk))
 
     @property
@@ -27,7 +28,7 @@ class Problem(db.Document):
         if os.path.exists(self.body_file):
             os.remove(self.body_file)
         if os.path.exists(self.testcase_dir):
-            os.rmdir(self.testcase_dir)
+            shutil.rmtree(self.testcase_dir)
         super(Problem, self).delete()
 
 
