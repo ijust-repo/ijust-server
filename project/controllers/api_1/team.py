@@ -117,7 +117,7 @@ def info(tid):
             owner:
               description: Owner info
               schema:
-                  id: TeamMemberInfo
+                  id: UserAbsInfo
                   type: object
                   properties:
                     id:
@@ -130,7 +130,7 @@ def info(tid):
               type: array
               items:
                 schema:
-                  $ref: "#/definitions/api_1_team_info_get_TeamMemberInfo"
+                  $ref: "#/definitions/api_1_team_info_get_UserAbsInfo"
       401:
         description: Token is invalid or has expired
       404:
@@ -192,7 +192,7 @@ def edit(tid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You are'nt owner of the team
+        description: You aren't owner of the team
       404:
         description: Team or Member does not exist
       409:
@@ -203,7 +203,7 @@ def edit(tid):
     try:
         obj = Team.objects().get(pk=tid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You are'nt owner of the team"), 403
+            return jsonify(errors="You aren't owner of the team"), 403
 
         obj.populate(json)
         obj.save()

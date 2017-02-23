@@ -41,5 +41,6 @@ class Team(db.Document):
     def to_json_abs(self):
         return dict(
             id = str(self.pk),
-            name = self.name
+            name = self.name,
+            owner = self.owner.to_json()
         )
