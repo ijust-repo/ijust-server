@@ -35,6 +35,10 @@ class DefaultConfig(object):
 
     MAX_CONTENT_LENGTH = 4 * 1024 * 1024
 
+    # pagination
+
+    DEFAULT_PAGE_SIZE = 10
+
     # cache
 
     CACHE_TYPE = 'null'

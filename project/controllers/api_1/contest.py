@@ -14,6 +14,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 # project imports
 from project import app
 from project.extensions import db, auth
+from project.modules.paginator import paginate
 from project.models.contest import Problem, Contest, ContestDateTimeException
 from project.models.team import Team
 from project.models.user import User
@@ -229,6 +230,118 @@ def edit(cid):
         return jsonify(
             error="EndTime must be greater than StartTime and StartTime must be greater than CreationTime"
         ), 406
+
+
+@app.api_route('', methods=['GET'])
+@paginate('contests', 20)
+@auth.authenticate
+def list():
+    """
+    Get My Contests List
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: page
+        in: query
+        type: integer
+        required: false
+        description: Page number
+      - name: per_page
+        in: query
+        type: integer
+        required: false
+        description: Contest amount per page (default is 10)
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: List of contests
+        schema:
+          id: ContestsList
+          type: object
+          properties:
+            contests:
+              type: array
+              items:
+                schema:
+                  $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
+            meta:
+              type: object
+              description: Pagination meta data
+              properties:
+                first:
+                  type: string
+                  description: Url for first page of results
+                last:
+                  type: string
+                  description: Url for last page of results
+                next:
+                  type: string
+                  description: Url for next page of results
+                prev:
+                  type: string
+                  description: Url for previous page of results
+                page:
+                  type: integer
+                  description: Number of the current page
+                pages:
+                  type: integer
+                  description: All pages count
+                per_page:
+                  type: integer
+                  description: Item per each page
+                total:
+                  type: integer
+                  description: Total count of all items
+      401:
+        description: Token is invalid or has expired
+    """
+
+    user_obj = User.objects().get(pk=g.user_id)
+    contests = Contest.objects().filter(owner=user_obj).order_by('-starts_at')
+    return contests
+
+
+@app.api_route('all', methods=['GET'])
+@paginate('contests', 20)
+@auth.authenticate
+def list_all():
+    """
+    Get All Contests List
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: page
+        in: query
+        type: integer
+        required: false
+        description: Page number
+      - name: per_page
+        in: query
+        type: integer
+        required: false
+        description: Contest amount per page (default is 10)
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: List of contests
+        schema:
+            $ref: "#/definitions/api_1_contest_list_get_ContestsList"
+      401:
+        description: Token is invalid or has expired
+    """
+
+    contests = Contest.objects().order_by('-starts_at')
+    return contests
 
 
 
