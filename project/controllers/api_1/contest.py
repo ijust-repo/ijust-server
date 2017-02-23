@@ -444,7 +444,7 @@ def team_accept(cid, tid):
       404:
         description: Contest or Team does not exist
       406:
-        description: The team did not request to join
+        description: The team has not requested to join
     """
 
     try:
@@ -454,7 +454,7 @@ def team_accept(cid, tid):
 
         team_obj = Team.objects().get(pk=tid)
         if not team_obj in obj.pending_teams:
-            return jsonify(errors="The team did not request to join"), 406
+            return jsonify(errors="The team has not requested to join"), 406
 
         obj.update(pull__pending_teams=team_obj, add_to_set__accepted_teams=team_obj)
         return '', 200
@@ -496,7 +496,7 @@ def team_reject(cid, tid):
       404:
         description: Contest or Team does not exist
       406:
-        description: The team did not request to join
+        description: The team has not requested to join
     """
 
     try:
@@ -506,7 +506,7 @@ def team_reject(cid, tid):
 
         team_obj = Team.objects().get(pk=tid)
         if not team_obj in obj.pending_teams:
-            return jsonify(errors="The team did not request to join"), 406
+            return jsonify(errors="The team has not requested to join"), 406
 
         obj.update(pull__pending_teams=team_obj)
         return '', 200
