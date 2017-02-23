@@ -12,7 +12,6 @@ class User(db.Document):
     username = db.StringField(required=True, unique=True)
     email = db.EmailField(required=True, unique=True)
     password = db.StringField(required=True)
-    teams = db.ListField(db.ReferenceField('Team', reverse_delete_rule=db.PULL))
 
 
     def hash_password(self, password):
@@ -44,7 +43,6 @@ class User(db.Document):
             id = str(self.pk),
             username = self.username,
             email = self.email,
-            teams = [team.to_json_abs() for team in self.teams]
         )
 
 

@@ -188,18 +188,6 @@ def info(uid):
             email:
               type: string
               description: Email
-            teams:
-              type: array
-              items:
-                schema:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      description: Team id
-                    name:
-                      type: string
-                      description: Team name
       401:
         description: Token is invalid or has expired
       404:

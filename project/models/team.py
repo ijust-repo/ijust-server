@@ -3,6 +3,7 @@ __author__ = 'AminHP'
 
 # project imports
 from project.extensions import db
+from project.models.user import User
 
 
 class Team(db.Document):
@@ -11,22 +12,21 @@ class Team(db.Document):
     members = db.ListField(db.ReferenceField('User'))
 
 
-    def populate(self, json):
-        from project.models.user import User
+    @classmethod
+    def teams(cls, user_obj):
+        owner_teams = cls.objects().filter(owner=user_obj)
+        owner_teams = [t.to_json() for t in owner_teams]
+        member_teams = cls.objects().filter(members=user_obj)
+        member_teams = [t.to_json() for t in member_teams]
+        return dict(owner_teams=owner_teams, member_teams=member_teams)
 
+
+    def populate(self, json):
         if 'name' in json:
             self.name = json['name']
         if 'members' in json:
             members = filter(lambda un: un != self.owner.username, json['members'])
-            members = [User.objects().get(username=username) for username in members]
-
-            for m in (self.members or []):
-                m.update(pull__teams=self)
-
-            self.members = members
-            for user in self.members:
-                user.teams.append(self)
-                user.save()
+            self.members = [User.objects().get(username=username) for username in members]
 
 
     def to_json(self):

@@ -66,17 +66,14 @@ def create():
     json = request.json
     try:
         owner = User.objects().get(id=g.user_id)
-        if len(owner.teams) > 5:
+        my_teams = Team.teams(owner)
+        if len(my_teams['owner_teams']) >= 5:
             return jsonify(errors="You can't create more teams"), 406
 
         obj = Team(name=json['name'])
         obj.owner = owner
-        obj.save()
         obj.populate(json)
         obj.save()
-
-        owner.teams.append(obj)
-        owner.save()
         return jsonify(obj.to_json()), 201
 
     except db.NotUniqueError:
@@ -216,3 +213,44 @@ def edit(tid):
         return jsonify(error="Team name already exists"), 409
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='Member does not exist'), 404
+
+
+
+@app.api_route('', methods=['GET'])
+@auth.authenticate
+def list():
+    """
+    My Teams
+    ---
+    tags:
+      - team
+    parameters:
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Team informations
+        schema:
+          id: TeamInfos
+          type: object
+          properties:
+            owner_teams:
+              type: array
+              items:
+                schema:
+                  $ref: "#/definitions/api_1_team_info_get_TeamInfo"
+            member_teams:
+              type: array
+              items:
+                schema:
+                  $ref: "#/definitions/api_1_team_info_get_TeamInfo"
+      401:
+        description: Token is invalid or has expired
+    """
+
+    user_obj = User.objects().get(pk=g.user_id)
+    teams = Team.teams(user_obj)
+    return jsonify(teams), 200
