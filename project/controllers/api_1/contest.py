@@ -7,7 +7,7 @@ import shutil
 import zipfile
 
 # flask imports
-from flask import jsonify, request, g
+from flask import jsonify, request, g, send_file
 from werkzeug.exceptions import RequestEntityTooLarge
 
 # project imports
@@ -943,7 +943,7 @@ def problem_upload_body(cid, pid):
       200:
         description: Successfully uploaded
       400:
-        description: Bad request
+        description: Bad file
       401:
         description: Token is invalid or has expired
       403:
@@ -1007,7 +1007,7 @@ def problem_upload_testcase(cid, pid):
       200:
         description: Successfully uploaded
       400:
-        description: Bad request
+        description: Bad file
       401:
         description: Token is invalid or has expired
       403:
@@ -1038,5 +1038,52 @@ def problem_upload_testcase(cid, pid):
         return "", 200
     except RequestEntityTooLarge:
         return jsonify(errors='Request entity too large. (max is 4mg)'), 413
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Contest or problem does not exist'), 404
+
+
+@app.api_route('<string:cid>/problem/<string:pid>/body', methods=['GET'])
+@auth.authenticate
+def problem_download_body(cid, pid):
+    """
+    Problem Download Body File
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: pid
+        in: path
+        type: string
+        required: true
+        description: Id of problem
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Problem body file
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest or problem does not exist
+    """
+
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return jsonify(errors="You aren't owner of the contest"), 403
+
+        problem_obj = Problem.objects().get(pk=pid)
+        return send_file(problem_obj.body_addr)
+
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='Contest or problem does not exist'), 404

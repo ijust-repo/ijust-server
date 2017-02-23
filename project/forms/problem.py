@@ -18,7 +18,7 @@ class UploadProblemBody(FlaskForm):
         if not FlaskForm.validate(self):
             return False
 
-        data = self.body.data.read(64)
+        data = self.body.data.read(16)
         self.body.data.seek(0)
 
         if not magic.from_buffer(data, mime=True) in self.allowed_extensions:
@@ -34,7 +34,7 @@ class UploadTestCase(FlaskForm):
         if not FlaskForm.validate(self):
             return False
 
-        data = self.testcase.data.read(64)
+        data = self.testcase.data.read(16)
         self.testcase.data.seek(0)
 
         if not magic.from_buffer(data, mime=True) in self.allowed_extensions:
