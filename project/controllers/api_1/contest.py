@@ -5,6 +5,7 @@ __author__ = 'AminHP'
 import os
 import shutil
 import zipfile
+from time import time
 
 # flask imports
 from flask import jsonify, request, g, send_file
@@ -637,15 +638,20 @@ def problem_info(cid, pid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't allowed to see problem
       404:
         description: Contest or problem does not exist
     """
 
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+        user_obj = User.objects().get(pk=g.user_id)
+        now = time()
+
+        if not (str(obj.owner.pk) == g.user_id or \
+               (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
+               (now > obj.ends_at)):
+            return jsonify(errors="You aren't allowed to see problem"), 403
 
         problem_obj = Problem.objects().get(pk=pid)
         return jsonify(problem_obj.to_json()), 200
@@ -695,15 +701,20 @@ def problem_list(cid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't allowed to see problems
       404:
         description: Contest does not exist
     """
 
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+        user_obj = User.objects().get(pk=g.user_id)
+        now = time()
+
+        if not (str(obj.owner.pk) == g.user_id or \
+               (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
+               (now > obj.ends_at)):
+            return jsonify(errors="You aren't allowed to see problems"), 403
 
         return jsonify(obj.to_json_problems()), 200
     except (db.DoesNotExist, db.ValidationError):
@@ -1072,15 +1083,20 @@ def problem_download_body(cid, pid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't allowed to see problem body
       404:
         description: Contest or problem does not exist
     """
 
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+        user_obj = User.objects().get(pk=g.user_id)
+        now = time()
+
+        if not (str(obj.owner.pk) == g.user_id or \
+               (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
+               (now > obj.ends_at)):
+            return jsonify(errors="You aren't allowed to see problem body"), 403
 
         problem_obj = Problem.objects().get(pk=pid)
         return send_file(problem_obj.body_addr)

@@ -69,6 +69,13 @@ class Contest(db.Document):
     problems = db.ListField(db.ReferenceField('Problem', reverse_delete_rule=db.PULL))
 
 
+    def is_user_in_contest(self, user_obj):
+        for team in self.accepted_teams:
+            if team.owner == user_obj or user_obj in team.members:
+                return True
+        return False
+
+
     def populate(self, json):
         if 'name' in json:
             self.name = json['name']
