@@ -295,6 +295,8 @@ def contest_list(tid):
                   $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
       401:
         description: Token is invalid or has expired
+      404:
+        description: Team does not exist
     """
 
     try:
@@ -306,4 +308,4 @@ def contest_list(tid):
 
         return jsonify(waiting_contests=wc, joined_contests=jc), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest does not exist'), 404
+        return jsonify(errors='Team does not exist'), 404
