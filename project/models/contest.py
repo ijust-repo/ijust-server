@@ -25,8 +25,8 @@ class Problem(db.Document):
         return os.path.join(app.config['TESTCASE_DIR'], str(self.pk))
 
     def delete(self):
-        if os.path.exists(self.body_file):
-            os.remove(self.body_file)
+        if os.path.exists(self.body_addr):
+            os.remove(self.body_addr)
         if os.path.exists(self.testcase_dir):
             shutil.rmtree(self.testcase_dir)
         super(Problem, self).delete()
