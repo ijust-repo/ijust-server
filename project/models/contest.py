@@ -12,7 +12,7 @@ from project.extensions import db
 
 class Problem(db.Document):
     title = db.StringField(required=True)
-    time_limit = db.IntField(required=True)
+    time_limit = db.FloatField(required=True)
     space_limit = db.IntField(required=True)
 
     @property
@@ -29,6 +29,31 @@ class Problem(db.Document):
         if os.path.exists(self.testcase_dir):
             os.rmdir(self.testcase_dir)
         super(Problem, self).delete()
+
+
+    def populate(self, json):
+        if 'title' in json:
+            self.title = json['title']
+        if 'time_limit' in json:
+            self.time_limit = json['time_limit']
+        if 'space_limit' in json:
+            self.space_limit = json['space_limit']
+
+
+    def to_json(self):
+        return dict(
+            id = str(self.pk),
+            title = self.title,
+            time_limit = self.time_limit,
+            space_limit = self.space_limit
+        )
+
+
+    def to_json_abs(self):
+        return dict(
+            id = str(self.pk),
+            title = self.title
+        )
 
 
 
@@ -68,10 +93,17 @@ class Contest(db.Document):
             ends_at = self.ends_at
         )
 
+
     def to_json_teams(self):
         return dict(
             pending_teams = [team.to_json_abs() for team in self.pending_teams],
             accepted_teams = [team.to_json_abs() for team in self.accepted_teams]
+        )
+
+
+    def to_json_problems(self):
+        return dict(
+            problems = [prob.to_json_abs() for prob in self.problems]
         )
 
 

@@ -7,7 +7,7 @@ from flask import jsonify, request, g
 # project imports
 from project import app
 from project.extensions import db, auth
-from project.models.contest import Contest, ContestDateTimeException
+from project.models.contest import Problem, Contest, ContestDateTimeException
 from project.models.team import Team
 from project.models.user import User
 
@@ -160,7 +160,7 @@ def edit(cid):
         in: path
         type: string
         required: true
-        description: Id of Contest
+        description: Id of contest
       - name: body
         in: body
         description: Contest information
@@ -238,7 +238,7 @@ def team_join(cid):
         in: path
         type: string
         required: true
-        description: Id of Contest
+        description: Id of contest
       - name: body
         in: body
         description: Team Identification
@@ -299,7 +299,7 @@ def team_unjoin(cid):
         in: path
         type: string
         required: true
-        description: Id of Contest
+        description: Id of contest
       - name: body
         in: body
         description: Team Identification
@@ -359,7 +359,7 @@ def team_list(cid):
         description: Token of current user
     responses:
       200:
-        description: Contest information
+        description: List of teams
         schema:
           id: ContestTeamsList
           type: object
@@ -416,12 +416,12 @@ def team_accept(cid, tid):
         in: path
         type: string
         required: true
-        description: Id of Contest
+        description: Id of contest
       - name: tid
         in: path
         type: string
         required: true
-        description: Id of Team
+        description: Id of team
       - name: Access-Token
         in: header
         type: string
@@ -470,12 +470,12 @@ def team_reject(cid, tid):
         in: path
         type: string
         required: true
-        description: Id of Contest
+        description: Id of contest
       - name: tid
         in: path
         type: string
         required: true
-        description: Id of Team
+        description: Id of team
       - name: Access-Token
         in: header
         type: string
@@ -516,30 +516,390 @@ def team_reject(cid, tid):
 @app.api_validate('contest.problem_create_schema')
 @auth.authenticate
 def problem_create(cid):
-    pass
+    """
+    Create Problem
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: body
+        in: body
+        description: Problem information
+        required: true
+        schema:
+          id: ProblemCreation
+          required:
+            - title
+            - time_limit
+            - space_limit
+          properties:
+            title:
+              type: string
+              example: babyknight
+              maxLength: 32
+            time_limit:
+              type: number
+              minimum: 0.1
+              maximum: 10
+              description: Problem time limit (seconds)
+            space_limit:
+              type: integer
+              minimum: 16
+              maximum: 256
+              description: Problem space limit (mega bytes)
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      201:
+        description: Successfully created
+        schema:
+          $ref: "#/definitions/api_1_contest_problem_info_get_ProblemInfo"
+      400:
+        description: Bad request
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest does not exist
+    """
+
+    json = request.json
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return jsonify(errors="You aren't owner of the contest"), 403
+
+        problem_obj = Problem()
+        problem_obj.populate(json)
+        problem_obj.save()
+        obj.update(push__problems=problem_obj)
+        return jsonify(problem_obj.to_json()), 201
+
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Contest does not exist'), 404
+
+
+@app.api_route('<string:cid>/problem/<string:pid>', methods=['GET'])
+@auth.authenticate
+def problem_info(cid, pid):
+    """
+    Problem Info
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: pid
+        in: path
+        type: string
+        required: true
+        description: Id of problem
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Problem information
+        schema:
+          id: ProblemInfo
+          type: object
+          properties:
+            id:
+              type: string
+              description: Problem id
+            title:
+              type: string
+              description: Problem title
+            time_limit:
+              type: number
+              description: Problem time limit (seconds)
+            space_limit:
+              type: integer
+              description: Problem space limit (mega bytes)
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest or problem does not exist
+    """
+
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return jsonify(errors="You aren't owner of the contest"), 403
+
+        problem_obj = Problem.objects().get(pk=pid)
+        return jsonify(problem_obj.to_json()), 200
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Contest or problem does not exist'), 404
+
+
+@app.api_route('<string:cid>/problem', methods=['GET'])
+@auth.authenticate
+def problem_list(cid):
+    """
+    Problem List
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: List of problems
+        schema:
+          id: ContestProblemsList
+          type: object
+          properties:
+            problems:
+              type: array
+              items:
+                schema:
+                  id: ProblemAbsInfo
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Problem id
+                    title:
+                      type: string
+                      description: Problem title
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest does not exist
+    """
+
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return jsonify(errors="You aren't owner of the contest"), 403
+
+        return jsonify(obj.to_json_problems()), 200
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Contest does not exist'), 404
 
 
 @app.api_route('<string:cid>/problem/<string:pid>', methods=['PUT'])
 @app.api_validate('contest.problem_edit_schema')
 @auth.authenticate
 def problem_edit(cid, pid):
-    pass
+    """
+    Edit Problem
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: pid
+        in: path
+        type: string
+        required: true
+        description: Id of problem
+      - name: body
+        in: body
+        description: Problem information
+        required: true
+        schema:
+          id: ProblemEdition
+          properties:
+            title:
+              type: string
+              example: babyknight
+              maxLength: 32
+            time_limit:
+              type: number
+              minimum: 0.1
+              maximum: 10
+              description: Problem time limit (seconds)
+            space_limit:
+              type: integer
+              minimum: 16
+              maximum: 256
+              description: Problem space limit (mega bytes)
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successfully edited
+        schema:
+          $ref: "#/definitions/api_1_contest_problem_info_get_ProblemInfo"
+      400:
+        description: Bad request
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest or problem does not exist
+    """
+
+    json = request.json
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return jsonify(errors="You aren't owner of the contest"), 403
+
+        problem_obj = Problem.objects().get(pk=pid)
+        problem_obj.populate(json)
+        problem_obj.save()
+        return jsonify(problem_obj.to_json()), 200
+
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Contest does not exist'), 404
 
 
 @app.api_route('<string:cid>/problem', methods=['PATCH'])
 @app.api_validate('contest.problem_change_order_schema')
 @auth.authenticate
 def problem_change_order(cid):
-    pass
+    """
+    Problem Change Order
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: body
+        in: body
+        description: Problems order
+        required: true
+        schema:
+          id: ProblemsOrder
+          required:
+          - order
+          properties:
+            order:
+              type: array
+              items:
+                type: integer
+                description: order number
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: List of problems
+        schema:
+          $ref: "#/definitions/api_1_contest_problem_list_get_ContestProblemsList"
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest does not exist
+      406:
+        description: Bad order format
+    """
+
+    json = request.json
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return jsonify(errors="You aren't owner of the contest"), 403
+
+        if len(list(set(json['order']))) != len(json['order']) or \
+            len(json['order']) != len(obj.problems):
+            return jsonify(errors="Bad order format"), 406
+
+        new_problems = []
+        for i in json['order']:
+            new_problems.append(obj.problems[i])
+        obj.problems = new_problems
+        obj.save()
+
+        return jsonify(obj.to_json_problems()), 200
+    except IndexError:
+        return jsonify(errors="Bad order format"), 406
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Contest does not exist'), 404
 
 
-@app.api_route('<string:cid>/problem', methods=['GET'])
+@app.api_route('<string:cid>/problem/<string:pid>', methods=['DELETE'])
 @auth.authenticate
-def problem_list(cid):
-    pass
+def problem_delete(cid, pid):
+    """
+    Problem Delete
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: pid
+        in: path
+        type: string
+        required: true
+        description: Id of problem
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: List of problems
+        schema:
+          $ref: "#/definitions/api_1_contest_problem_list_get_ContestProblemsList"
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest or problem does not exist
+    """
 
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return jsonify(errors="You aren't owner of the contest"), 403
 
-@app.api_route('<string:cid>/problem/<string:pid>', methods=['GET'])
-@auth.authenticate
-def problem_info(cid, pid):
-    pass
+        problem_obj = Problem.objects().get(pk=pid)
+        problem_obj.delete()
+        obj.reload()
+        return jsonify(obj.to_json_problems()), 200
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Contest or problem does not exist'), 404
