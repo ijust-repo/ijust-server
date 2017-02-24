@@ -78,7 +78,7 @@ def create():
         return jsonify(obj.to_json()), 201
 
     except db.NotUniqueError:
-        return jsonify(error="Team already exists"), 409
+        return jsonify(errors="Team already exists"), 409
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='Member does not exist'), 404
 
@@ -211,7 +211,7 @@ def edit(tid):
         return jsonify(obj.to_json()), 200
 
     except db.NotUniqueError:
-        return jsonify(error="Team name already exists"), 409
+        return jsonify(errors="Team name already exists"), 409
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='Member does not exist'), 404
 

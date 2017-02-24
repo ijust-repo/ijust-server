@@ -62,7 +62,7 @@ def signup():
         obj.save()
         return jsonify(obj.to_json()), 201
     except db.NotUniqueError:
-        return jsonify(error="Email or username already exists"), 409
+        return jsonify(errors="Email or username already exists"), 409
 
 
 @app.api_route('login', methods=['POST'])

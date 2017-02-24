@@ -4,11 +4,11 @@ __author__ = 'AminHP'
 # python imports
 import os
 import shutil
-from time import time
 
 # project imports
 from project import app
 from project.extensions import db
+from project.modules.datetime import utcnowts
 
 
 class Problem(db.Document):
@@ -61,7 +61,7 @@ class Problem(db.Document):
 class Contest(db.Document):
     name = db.StringField(required=True, unique=True)
     owner = db.ReferenceField('User', required=True)
-    created_at = db.IntField(required=True, default=lambda: int(time()))
+    created_at = db.IntField(required=True, default=lambda: utcnowts())
     starts_at = db.IntField(required=True)
     ends_at = db.IntField(required=True)
     pending_teams = db.ListField(db.ReferenceField('Team', reverse_delete_rule=db.PULL))

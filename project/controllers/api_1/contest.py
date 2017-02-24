@@ -5,7 +5,6 @@ __author__ = 'AminHP'
 import os
 import shutil
 import zipfile
-from time import time
 
 # flask imports
 from flask import jsonify, request, g, send_file
@@ -14,6 +13,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 # project imports
 from project import app
 from project.extensions import db, auth
+from project.modules.datetime import utcnowts
 from project.modules.paginator import paginate
 from project.models.contest import Problem, Contest, ContestDateTimeException
 from project.models.team import Team
@@ -82,10 +82,10 @@ def create():
         return jsonify(obj.to_json()), 201
 
     except db.NotUniqueError:
-        return jsonify(error="Contest already exists"), 409
+        return jsonify(errors="Contest already exists"), 409
     except ContestDateTimeException:
         return jsonify(
-            error="EndTime must be greater than StartTime and StartTime must be greater than CreationTime"
+            errors="EndTime must be greater than StartTime and StartTime must be greater than CreationTime"
         ), 406
 
 
@@ -223,12 +223,12 @@ def edit(cid):
         return jsonify(obj.to_json()), 200
 
     except db.NotUniqueError:
-        return jsonify(error="Contest name already exists"), 409
+        return jsonify(errors="Contest name already exists"), 409
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='Contest does not exist'), 404
     except ContestDateTimeException:
         return jsonify(
-            error="EndTime must be greater than StartTime and StartTime must be greater than CreationTime"
+            errors="EndTime must be greater than StartTime and StartTime must be greater than CreationTime"
         ), 406
 
 
@@ -759,7 +759,7 @@ def problem_info(cid, pid):
     try:
         obj = Contest.objects().get(pk=cid)
         user_obj = User.objects().get(pk=g.user_id)
-        now = time()
+        now = utcnowts()
 
         if not (str(obj.owner.pk) == g.user_id or \
                (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
@@ -822,7 +822,7 @@ def problem_list(cid):
     try:
         obj = Contest.objects().get(pk=cid)
         user_obj = User.objects().get(pk=g.user_id)
-        now = time()
+        now = utcnowts()
 
         if not (str(obj.owner.pk) == g.user_id or \
                (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
@@ -1204,7 +1204,7 @@ def problem_download_body(cid, pid):
     try:
         obj = Contest.objects().get(pk=cid)
         user_obj = User.objects().get(pk=g.user_id)
-        now = time()
+        now = utcnowts()
 
         if not (str(obj.owner.pk) == g.user_id or \
                (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
