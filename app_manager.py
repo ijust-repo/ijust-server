@@ -64,8 +64,10 @@ def celery():
     """
     Run celery worker.
     """
+    from mongoengine.connection import disconnect
     from project.extensions import celery
     from celery.bin import worker
+    disconnect()
     worker = worker.worker(app=celery)
     worker.run()
 

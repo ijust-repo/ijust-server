@@ -17,6 +17,7 @@ from project.models.contest import Problem, Contest
 from project.models.team import Team
 from project.models.user import User
 from project.forms.submission import UploadCode
+from project.extensions import celery
 
 
 @app.api_route('', methods=['POST'])
@@ -110,6 +111,8 @@ def create():
         if not os.path.exists(directory):
             os.makedirs(directory)
         file_obj.save(obj.code_addr)
+
+        check_code.delay(str(obj.pk))
 
         return "", 201
     except RequestEntityTooLarge:
@@ -311,3 +314,10 @@ def download_code(sid):
         return send_file(obj.code_addr)
     except (db.DoesNotExist, db.ValidationError):
         return jsonify(errors='Submission does not exist'), 404
+
+
+
+@celery.task()
+def check_code(sid):
+    obj = Submission.objects().get(pk=sid)
+    # check submitted code here
