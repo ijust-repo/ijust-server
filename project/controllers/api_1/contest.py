@@ -1068,12 +1068,17 @@ def problem_delete(cid, pid):
         description: You aren't owner of the contest
       404:
         description: Contest or problem does not exist
+      406:
+        description: Contest has been started
     """
 
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the contest")
+
+        if utcnowts() >= obj.starts_at:
+            return abort(406, "Contest has been started")
 
         problem_obj = Problem.objects().get(pk=pid)
         problem_obj.delete()
