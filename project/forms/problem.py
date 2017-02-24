@@ -14,10 +14,7 @@ class UploadProblemBody(FlaskForm):
     body = FileField(validators=[DataRequired()])
     allowed_extensions = ['application/pdf']
 
-    def validate(self):
-        if not FlaskForm.validate(self):
-            return False
-
+    def validate_file(self):
         data = self.body.data.read(16)
         self.body.data.seek(0)
 
@@ -30,10 +27,7 @@ class UploadTestCase(FlaskForm):
     testcase = FileField(validators=[DataRequired()])
     allowed_extensions = ['application/zip']
 
-    def validate(self):
-        if not FlaskForm.validate(self):
-            return False
-
+    def validate_file(self):
         data = self.testcase.data.read(16)
         self.testcase.data.seek(0)
 

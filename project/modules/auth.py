@@ -4,7 +4,7 @@
 from functools import wraps
 
 # flask imports
-from flask import request, jsonify, g
+from flask import request, abort, g
 from uuid import uuid4
 
 
@@ -36,13 +36,13 @@ class Auth(object):
         def decorated(*args, **kwargs):
 
             if not 'Access-Token' in request.headers:
-                return jsonify(errors='Set token to access protected routes'), 401
+                return abort(401, "Set token to access protected routes")
 
             token = request.headers['Access-Token']
             user_id = self.redis.get(token)
 
             if not user_id:
-                return jsonify(errors='Token is invalid or has expired'), 401
+                return abort(401, "Token is invalid or has expired")
 
             g.user_id = user_id
             return f(*args, **kwargs)

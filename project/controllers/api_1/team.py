@@ -2,7 +2,7 @@
 __author__ = 'AminHP'
 
 # flask imports
-from flask import jsonify, request, g
+from flask import jsonify, request, g, abort
 
 # project imports
 from project import app
@@ -69,7 +69,7 @@ def create():
         owner = User.objects().get(id=g.user_id)
         my_teams = Team.teams(owner)
         if len(my_teams['owner_teams']) >= 5:
-            return jsonify(errors="You can't create more teams"), 406
+            return abort(406, "You can't create more teams")
 
         obj = Team(name=json['name'])
         obj.owner = owner
@@ -78,9 +78,9 @@ def create():
         return jsonify(obj.to_json()), 201
 
     except db.NotUniqueError:
-        return jsonify(errors="Team already exists"), 409
+        return abort(409, "Team already exists")
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Member does not exist'), 404
+        return abort(404, "Member does not exist")
 
 
 @app.api_route('<string:tid>', methods=['GET'])
@@ -142,7 +142,7 @@ def info(tid):
         obj = Team.objects().get(pk=tid)
         return jsonify(obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Team does not exist'), 404
+        return abort('404, Team does not exist')
 
 
 @app.api_route('<string:tid>', methods=['PUT'])
@@ -204,16 +204,16 @@ def edit(tid):
     try:
         obj = Team.objects().get(pk=tid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the team"), 403
+            return abort(403, "You aren't owner of the team")
 
         obj.populate(json)
         obj.save()
         return jsonify(obj.to_json()), 200
 
     except db.NotUniqueError:
-        return jsonify(errors="Team name already exists"), 409
+        return abort(409, "Team name already exists")
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Member does not exist'), 404
+        return abort(404, "Member does not exist")
 
 
 

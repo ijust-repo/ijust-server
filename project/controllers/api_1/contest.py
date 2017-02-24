@@ -7,8 +7,7 @@ import shutil
 import zipfile
 
 # flask imports
-from flask import jsonify, request, g, send_file
-from werkzeug.exceptions import RequestEntityTooLarge
+from flask import jsonify, request, g, send_file, abort
 
 # project imports
 from project import app
@@ -82,11 +81,9 @@ def create():
         return jsonify(obj.to_json()), 201
 
     except db.NotUniqueError:
-        return jsonify(errors="Contest already exists"), 409
+        return abort(409, "Contest already exists")
     except ContestDateTimeException:
-        return jsonify(
-            errors="EndTime must be greater than StartTime and StartTime must be greater than CreationTime"
-        ), 406
+        return abort(406, "EndTime must be greater than StartTime and StartTime must be greater than CreationTime")
 
 
 @app.api_route('<string:cid>', methods=['GET'])
@@ -152,7 +149,7 @@ def info(cid):
         obj = Contest.objects().get(pk=cid)
         return jsonify(obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest does not exist'), 404
+        return abort(404, "Contest does not exist")
 
 
 @app.api_route('<string:cid>', methods=['PUT'])
@@ -216,20 +213,18 @@ def edit(cid):
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         obj.populate(json)
         obj.save()
         return jsonify(obj.to_json()), 200
 
     except db.NotUniqueError:
-        return jsonify(errors="Contest name already exists"), 409
+        return abort(409, "Contest name already exists")
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest does not exist'), 404
+        return abort(404, "Contest does not exist")
     except ContestDateTimeException:
-        return jsonify(
-            errors="EndTime must be greater than StartTime and StartTime must be greater than CreationTime"
-        ), 406
+        return abort(406, "EndTime must be greater than StartTime and StartTime must be greater than CreationTime")
 
 
 @app.api_route('', methods=['GET'])
@@ -395,7 +390,7 @@ def list_team(tid):
 
         return jsonify(waiting_contests=wc, joined_contests=jc), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Team does not exist'), 404
+        return abort(404, "Team does not exist")
 
 
 
@@ -449,15 +444,15 @@ def team_join(cid):
         team_obj = Team.objects().get(pk=json['team_id'])
 
         if str(team_obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the team"), 403
+            return abort(403, "You aren't owner of the team")
 
         if team_obj in obj.accepted_teams:
-            return jsonify(errors='You are already accepted'), 409
+            return abort(409, "You are already accepted")
 
         obj.update(add_to_set__pending_teams=team_obj)
         return '', 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest or Team does not exist'), 404
+        return abort(404, "Contest or Team does not exist")
 
 
 @app.api_route('<string:cid>/team', methods=['DELETE'])
@@ -505,12 +500,12 @@ def team_unjoin(cid):
         team_obj = Team.objects().get(pk=json['team_id'])
 
         if str(team_obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the team"), 403
+            return abort(403, "You aren't owner of the team")
 
         obj.update(pull__pending_teams=team_obj, pull__accepted_teams=team_obj)
         return '', 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest or Team does not exist'), 404
+        return abort(404, "Contest or Team does not exist")
 
 
 @app.api_route('<string:cid>/team', methods=['GET'])
@@ -571,11 +566,11 @@ def team_list(cid):
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         return jsonify(obj.to_json_teams()), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest does not exist'), 404
+        return abort(404, "Contest does not exist")
 
 
 @app.api_route('<string:cid>/team/<string:tid>', methods=['PATCH'])
@@ -618,16 +613,16 @@ def team_accept(cid, tid):
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         team_obj = Team.objects().get(pk=tid)
         if not team_obj in obj.pending_teams:
-            return jsonify(errors="The team has not requested to join"), 406
+            return abort(406, "The team has not requested to join")
 
         obj.update(pull__pending_teams=team_obj, add_to_set__accepted_teams=team_obj)
         return '', 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest or Team does not exist'), 404
+        return abort(404, "Contest or Team does not exist")
 
 
 @app.api_route('<string:cid>/team/<string:tid>', methods=['DELETE'])
@@ -670,16 +665,16 @@ def team_reject(cid, tid):
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         team_obj = Team.objects().get(pk=tid)
         if not team_obj in obj.pending_teams:
-            return jsonify(errors="The team has not requested to join"), 406
+            return abort(406, "The team has not requested to join")
 
         obj.update(pull__pending_teams=team_obj)
         return '', 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest or Team does not exist'), 404
+        return abort(404, "Contest or Team does not exist")
 
 
 
@@ -747,7 +742,7 @@ def problem_create(cid):
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         problem_obj = Problem()
         problem_obj.populate(json)
@@ -756,7 +751,7 @@ def problem_create(cid):
         return jsonify(problem_obj.to_json()), 201
 
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest does not exist'), 404
+        return abort(404, "Contest does not exist")
 
 
 @app.api_route('<string:cid>/problem/<string:pid>', methods=['GET'])
@@ -818,12 +813,12 @@ def problem_info(cid, pid):
         if not (str(obj.owner.pk) == g.user_id or \
                (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
                (now > obj.ends_at)):
-            return jsonify(errors="You aren't allowed to see problem"), 403
+            return abort(403, "You aren't allowed to see problem")
 
         problem_obj = Problem.objects().get(pk=pid)
         return jsonify(problem_obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest or problem does not exist'), 404
+        return abort(404, "Contest or problem does not exist")
 
 
 @app.api_route('<string:cid>/problem', methods=['GET'])
@@ -881,11 +876,11 @@ def problem_list(cid):
         if not (str(obj.owner.pk) == g.user_id or \
                (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
                (now > obj.ends_at)):
-            return jsonify(errors="You aren't allowed to see problems"), 403
+            return abort(403, "You aren't allowed to see problems")
 
         return jsonify(obj.to_json_problems()), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest does not exist'), 404
+        return abort(404, "Contest does not exist")
 
 
 @app.api_route('<string:cid>/problem/<string:pid>', methods=['PUT'])
@@ -953,7 +948,7 @@ def problem_edit(cid, pid):
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         problem_obj = Problem.objects().get(pk=pid)
         problem_obj.populate(json)
@@ -961,7 +956,7 @@ def problem_edit(cid, pid):
         return jsonify(problem_obj.to_json()), 200
 
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest does not exist'), 404
+        return abort(404, "Contest does not exist")
 
 
 @app.api_route('<string:cid>/problem', methods=['PATCH'])
@@ -1019,11 +1014,11 @@ def problem_change_order(cid):
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         if len(list(set(json['order']))) != len(json['order']) or \
             len(json['order']) != len(obj.problems):
-            return jsonify(errors="Bad order format"), 406
+            return abort(406, "Bad order format")
 
         new_problems = []
         for i in json['order']:
@@ -1033,9 +1028,9 @@ def problem_change_order(cid):
 
         return jsonify(obj.to_json_problems()), 200
     except IndexError:
-        return jsonify(errors="Bad order format"), 406
+        return abort(406, "Bad order format")
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest does not exist'), 404
+        return abort(404, "Contest does not exist")
 
 
 @app.api_route('<string:cid>/problem/<string:pid>', methods=['DELETE'])
@@ -1078,14 +1073,14 @@ def problem_delete(cid, pid):
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         problem_obj = Problem.objects().get(pk=pid)
         problem_obj.delete()
         obj.reload()
         return jsonify(obj.to_json_problems()), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest or problem does not exist'), 404
+        return abort(404, "Contest or problem does not exist")
 
 
 @app.api_route('<string:cid>/problem/<string:pid>/body', methods=['POST'])
@@ -1121,7 +1116,7 @@ def problem_upload_body(cid, pid):
       200:
         description: Successfully uploaded
       400:
-        description: Bad file
+        description: Bad request
       401:
         description: Token is invalid or has expired
       403:
@@ -1130,26 +1125,29 @@ def problem_upload_body(cid, pid):
         description: Contest or problem does not exist
       413:
         description: Request entity too large. (max is 4mg)
+      415:
+        description: Supported file type is only application/pdf
     """
 
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         form = UploadProblemBody()
         if not form.validate():
-            return jsonify(errors="Bad file"), 400
+            return abort(400, "Bad request")
+
+        if not form.validate_file():
+            return abort(415, "Supported file type is only application/pdf")
 
         problem_obj = Problem.objects().get(pk=pid)
         file_obj = form.body.data
         file_obj.save(problem_obj.body_addr)
 
         return "", 200
-    except RequestEntityTooLarge:
-        return jsonify(errors='Request entity too large. (max is 4mg)'), 413
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest or problem does not exist'), 404
+        return abort(404, "Contest or problem does not exist")
 
 
 @app.api_route('<string:cid>/problem/<string:pid>/testcase', methods=['POST'])
@@ -1185,7 +1183,7 @@ def problem_upload_testcase(cid, pid):
       200:
         description: Successfully uploaded
       400:
-        description: Bad file
+        description: Bad request
       401:
         description: Token is invalid or has expired
       403:
@@ -1194,16 +1192,21 @@ def problem_upload_testcase(cid, pid):
         description: Contest or problem does not exist
       413:
         description: Request entity too large. (max is 4mg)
+      415:
+        description: Supported file type is only application/zip
     """
 
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
-            return jsonify(errors="You aren't owner of the contest"), 403
+            return abort(403, "You aren't owner of the contest")
 
         form = UploadTestCase()
         if not form.validate():
-            return jsonify(errors="Bad file"), 400
+            return abort(400, "Bad request")
+
+        if not form.validate_file():
+            return abort(415, "Supported file type is only application/zip")
 
         problem_obj = Problem.objects().get(pk=pid)
         if os.path.exists(problem_obj.testcase_dir):
@@ -1214,10 +1217,8 @@ def problem_upload_testcase(cid, pid):
             zf.extractall(problem_obj.testcase_dir)
 
         return "", 200
-    except RequestEntityTooLarge:
-        return jsonify(errors='Request entity too large. (max is 4mg)'), 413
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest or problem does not exist'), 404
+        return abort(404, "Contest or problem does not exist")
 
 
 @app.api_route('<string:cid>/problem/<string:pid>/body', methods=['GET'])
@@ -1263,10 +1264,10 @@ def problem_download_body(cid, pid):
         if not (str(obj.owner.pk) == g.user_id or \
                (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
                (now > obj.ends_at)):
-            return jsonify(errors="You aren't allowed to see problem body"), 403
+            return abort(403, "You aren't allowed to see problem body")
 
         problem_obj = Problem.objects().get(pk=pid)
         return send_file(problem_obj.body_addr)
 
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Contest or problem does not exist'), 404
+        return abort(404, "Contest or problem does not exist")

@@ -5,8 +5,7 @@ __author__ = 'AminHP'
 import os
 
 # flask imports
-from flask import jsonify, request, g, send_file
-from werkzeug.exceptions import RequestEntityTooLarge
+from flask import jsonify, request, g, send_file, abort
 
 # project imports
 from project import app
@@ -74,12 +73,17 @@ def create():
         description: Contest has not started or has been finished
       413:
         description: Request entity too large. (max is 4mg)
+      415:
+        description: Supported file type is only text/plain
     """
 
     try:
         form = UploadCode()
         if not form.validate():
-            return jsonify(errors="Bad request"), 400
+            return abort(400, "Bad request")
+
+        if not form.validate_file():
+            return abort(415, "Supported file type is only text/plain")
 
         json = form.to_json()
         code = form.code.data
@@ -92,11 +96,11 @@ def create():
         if (not problem_obj in contest_obj.problems) or \
             (not team_obj in contest_obj.accepted_teams) or \
             (user_obj != team_obj.owner and not user_obj in team_obj.members):
-            return jsonify(errors="You aren't allowed to submit"), 403
+            return abort(403, "You aren't allowed to submit")
 
         now = utcnowts()
         if now < contest_obj.starts_at or now > contest_obj.ends_at:
-            return jsonify(errors="Contest has not started or has been finished"), 406
+            return abort(406, "Contest has not started or has been finished")
 
         obj = Submission()
         obj.populate(json)
@@ -115,10 +119,8 @@ def create():
         check_code.delay(str(obj.pk))
 
         return "", 201
-    except RequestEntityTooLarge:
-        return jsonify(errors='Request entity too large. (max is 4mg)'), 413
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors="Contest or problem or team does not exist"), 404
+        return abort(404, "Contest or problem or team does not exist")
 
 
 @app.api_route('team/<string:tid>/contest/<string:cid>/', methods=['GET'])
@@ -194,7 +196,7 @@ def list(tid, cid):
 
         if (not team_obj in contest_obj.accepted_teams) or \
             (user_obj != team_obj.owner and not user_obj in team_obj.members):
-            return jsonify(errors="You aren't owner or member of the team"), 403
+            return abort(403, "You aren't owner or member of the team")
 
         submissions = Submission.objects().filter(
             contest=contest_obj,
@@ -204,7 +206,7 @@ def list(tid, cid):
 
         return jsonify(submissions=submissions), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors="Team or contest does not exist"), 404
+        return abort(404, "Team or contest does not exist")
 
 
 @app.api_route('team/<string:tid>/contest/<string:cid>/problem/<string:pid>', methods=['GET'])
@@ -260,7 +262,7 @@ def list_problem(tid, cid, pid):
         if (not problem_obj in contest_obj.problems) or \
             (not team_obj in contest_obj.accepted_teams) or \
             (user_obj != team_obj.owner and not user_obj in team_obj.members):
-            return jsonify(errors="You aren't owner or member of the team"), 403
+            return abort(403, "You aren't owner or member of the team")
 
         submissions = Submission.objects().filter(
             contest=contest_obj,
@@ -271,7 +273,7 @@ def list_problem(tid, cid, pid):
 
         return jsonify(submissions=submissions), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors="Team or contest or problem does not exist"), 404
+        return abort(404, "Team or contest or problem does not exist")
 
 
 @app.api_route('<string:sid>/code', methods=['GET'])
@@ -309,11 +311,11 @@ def download_code(sid):
         user_obj = User.objects().get(pk=g.user_id)
 
         if user_obj != obj.team.owner and not user_obj in obj.team.members:
-            return jsonify(errors="You aren't owner or member of the team"), 403
+            return abort(403, "You aren't owner or member of the team")
 
         return send_file(obj.code_addr)
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='Submission does not exist'), 404
+        return abort(404, "Submission does not exist")
 
 
 

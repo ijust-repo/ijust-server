@@ -21,10 +21,7 @@ class UploadCode(FlaskForm):
     code = FileField(validators=[DataRequired()])
     allowed_extensions = ['text/plain']
 
-    def validate(self):
-        if not FlaskForm.validate(self):
-            return False
-
+    def validate_file(self):
         data = self.code.data.read(16)
         self.code.data.seek(0)
 

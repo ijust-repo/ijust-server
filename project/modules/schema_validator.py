@@ -9,7 +9,7 @@ from good import Schema, Invalid
 import collections
 
 # flask imports
-from flask import request, jsonify
+from flask import request, abort
 
 
 class Validator(object):
@@ -81,9 +81,7 @@ class Validator(object):
                             update(errors, main)
                         return errors
 
-                    if self.app.config['DEBUG']:
-                        return jsonify(errors=get_errors()), 400
-                    return '', 400
+                    return abort(400, get_errors())
 
                 return f(*args, **kwargs)
             return decorated

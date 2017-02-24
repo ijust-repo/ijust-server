@@ -2,7 +2,7 @@
 __author__ = 'AminHP'
 
 # flask imports
-from flask import jsonify, request, g, redirect, url_for
+from flask import jsonify, request, g, redirect, url_for, abort
 
 # project imports
 from project import app
@@ -62,7 +62,7 @@ def signup():
         obj.save()
         return jsonify(obj.to_json()), 201
     except db.NotUniqueError:
-        return jsonify(errors="Email or username already exists"), 409
+        return abort(409, "Email or username already exists")
 
 
 @app.api_route('login', methods=['POST'])
@@ -122,10 +122,10 @@ def login():
             token = auth.generate_token(obj.pk)
             return jsonify(token=token), 200
         else:
-            return jsonify(errors='Wrong password'), 406
+            return abort(406, "Wrong password")
 
-    except db.DoesNotExist:
-        return jsonify(errors='User does not exist'), 404
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "User does not exist")
 
 
 @app.api_route('logout', methods=['POST'])
@@ -198,7 +198,7 @@ def info(uid):
         obj = User.objects().get(pk=uid)
         return jsonify(obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
-        return jsonify(errors='User does not exist'), 404
+        return abort(404, "User does not exist")
 
 
 @app.api_route('', methods=['GET'])

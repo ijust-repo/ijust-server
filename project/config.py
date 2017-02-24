@@ -13,7 +13,6 @@ class DefaultConfig(object):
     DEBUG = True
     TESTING = True
     DEPLOYMENT = False
-    TRAP_HTTP_EXCEPTIONS = True
     TOKEN_EXPIRE_TIME = 5 * 3600
 
     # directory
