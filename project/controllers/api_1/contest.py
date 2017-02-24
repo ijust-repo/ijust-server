@@ -200,7 +200,7 @@ def edit(cid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest does not exist
       406:
@@ -212,8 +212,10 @@ def edit(cid):
     json = request.json
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         obj.populate(json)
         obj.save()
@@ -330,7 +332,7 @@ def list_all():
       200:
         description: List of contests
         schema:
-            $ref: "#/definitions/api_1_contest_list_get_ContestsList"
+          $ref: "#/definitions/api_1_contest_list_get_ContestsList"
       401:
         description: Token is invalid or has expired
     """
@@ -558,15 +560,17 @@ def team_list(cid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest does not exist
     """
 
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         return jsonify(obj.to_json_teams()), 200
     except (db.DoesNotExist, db.ValidationError):
@@ -603,7 +607,7 @@ def team_accept(cid, tid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest or Team does not exist
       406:
@@ -612,8 +616,10 @@ def team_accept(cid, tid):
 
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         team_obj = Team.objects().get(pk=tid)
         if not team_obj in obj.pending_teams:
@@ -655,7 +661,7 @@ def team_reject(cid, tid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest or Team does not exist
       406:
@@ -664,8 +670,10 @@ def team_reject(cid, tid):
 
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         team_obj = Team.objects().get(pk=tid)
         if not team_obj in obj.pending_teams:
@@ -733,7 +741,7 @@ def problem_create(cid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest does not exist
     """
@@ -741,8 +749,10 @@ def problem_create(cid):
     json = request.json
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         problem_obj = Problem()
         problem_obj.populate(json)
@@ -810,7 +820,7 @@ def problem_info(cid, pid):
         user_obj = User.objects().get(pk=g.user_id)
         now = utcnowts()
 
-        if not (str(obj.owner.pk) == g.user_id or \
+        if not (user_obj == obj.owner or user_obj in obj.admins or \
                (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
                (now > obj.ends_at)):
             return abort(403, "You aren't allowed to see problem")
@@ -873,7 +883,7 @@ def problem_list(cid):
         user_obj = User.objects().get(pk=g.user_id)
         now = utcnowts()
 
-        if not (str(obj.owner.pk) == g.user_id or \
+        if not (user_obj == obj.owner or user_obj in obj.admins or \
                (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
                (now > obj.ends_at)):
             return abort(403, "You aren't allowed to see problems")
@@ -939,7 +949,7 @@ def problem_edit(cid, pid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest or problem does not exist
     """
@@ -947,8 +957,10 @@ def problem_edit(cid, pid):
     json = request.json
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         problem_obj = Problem.objects().get(pk=pid)
         problem_obj.populate(json)
@@ -1003,7 +1015,7 @@ def problem_change_order(cid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest does not exist
       406:
@@ -1013,8 +1025,10 @@ def problem_change_order(cid):
     json = request.json
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         if len(list(set(json['order']))) != len(json['order']) or \
             len(json['order']) != len(obj.problems):
@@ -1065,7 +1079,7 @@ def problem_delete(cid, pid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest or problem does not exist
       406:
@@ -1074,8 +1088,10 @@ def problem_delete(cid, pid):
 
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         if utcnowts() >= obj.starts_at:
             return abort(406, "Contest has been started")
@@ -1125,7 +1141,7 @@ def problem_upload_body(cid, pid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest or problem does not exist
       413:
@@ -1136,8 +1152,10 @@ def problem_upload_body(cid, pid):
 
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         form = UploadProblemBody()
         if not form.validate():
@@ -1192,7 +1210,7 @@ def problem_upload_testcase(cid, pid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner of the contest
+        description: You aren't owner or admin of the contest
       404:
         description: Contest or problem does not exist
       413:
@@ -1203,8 +1221,10 @@ def problem_upload_testcase(cid, pid):
 
     try:
         obj = Contest.objects().get(pk=cid)
-        if str(obj.owner.pk) != g.user_id:
-            return abort(403, "You aren't owner of the contest")
+        user_obj = User.objects().get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
 
         form = UploadTestCase()
         if not form.validate():
@@ -1266,7 +1286,7 @@ def problem_download_body(cid, pid):
         user_obj = User.objects().get(pk=g.user_id)
         now = utcnowts()
 
-        if not (str(obj.owner.pk) == g.user_id or \
+        if not (user_obj == obj.owner or user_obj in obj.admins or \
                (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
                (now > obj.ends_at)):
             return abort(403, "You aren't allowed to see problem body")
@@ -1276,3 +1296,215 @@ def problem_download_body(cid, pid):
 
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest or problem does not exist")
+
+
+
+@app.api_route('<string:cid>/admin', methods=['PATCH'])
+@app.api_validate('contest.admin_add_schema')
+@auth.authenticate
+def admin_add(cid):
+    """
+    Admin Add
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: body
+        in: body
+        description: Problem information
+        required: true
+        schema:
+          id: AdminIdentificationName
+          required:
+            - username
+          properties:
+            username:
+              type: string
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      201:
+        description: Admin added
+        schema:
+          $ref: "#/definitions/api_1_contest_admin_list_get_AdminsList"
+      400:
+        description: Bad request
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest or user does not exist
+    """
+
+    json = request.json
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return abort(403, "You aren't owner of the contest")
+
+        user_obj = User.objects().get(username=json['username'])
+        if user_obj != obj.owner:
+            obj.update(add_to_set__admins=user_obj)
+            obj.reload()
+
+        return jsonify(obj.to_json_admins()), 201
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "Contest or user does not exist")
+
+
+@app.api_route('<string:cid>/admin', methods=['DELETE'])
+@app.api_validate('contest.admin_remove_schema')
+@auth.authenticate
+def admin_remove(cid):
+    """
+    Admin Remove
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: body
+        in: body
+        description: Problem information
+        required: true
+        schema:
+          id: AdminIdentificationId
+          required:
+            - user_id
+          properties:
+            user_id:
+              type: string
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successully removed
+        schema:
+          $ref: "#/definitions/api_1_contest_admin_list_get_AdminsList"
+      400:
+        description: Bad request
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest or user does not exist
+    """
+
+    json = request.json
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return abort(403, "You aren't owner of the contest")
+
+        user_obj = User.objects().get(pk=json['user_id'])
+
+        obj.update(pull__admins=user_obj)
+        obj.reload()
+        return jsonify(obj.to_json_admins()), 200
+
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "Contest or user does not exist")
+
+
+@app.api_route('<string:cid>/admin', methods=['GET'])
+@auth.authenticate
+def admin_list(cid):
+    """
+    Admin List
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: List of admins
+        schema:
+          id: AdminsList
+          properties:
+            admins:
+              type: array
+              items:
+                schema:
+                  $ref: "#/definitions/api_1_team_info_get_UserAbsInfo"
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest does not exist
+    """
+
+    try:
+        obj = Contest.objects().get(pk=cid)
+        if str(obj.owner.pk) != g.user_id:
+            return abort(403, "You aren't owner of the contest")
+
+        return jsonify(obj.to_json_admins()), 200
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "Contest does not exist")
+
+
+@app.api_route('admin', methods=['GET'])
+@paginate('contests', 20)
+@auth.authenticate
+def admin_contests():
+    """
+    Admin Contests
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: page
+        in: query
+        type: integer
+        required: false
+        description: Page number
+      - name: per_page
+        in: query
+        type: integer
+        required: false
+        description: Contest amount per page (default is 10)
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: List of contests
+        schema:
+          $ref: "#/definitions/api_1_contest_list_get_ContestsList"
+      401:
+        description: Token is invalid or has expired
+    """
+
+    user_obj = User.objects().get(pk=g.user_id)
+    contests = Contest.objects().filter(admins=user_obj).order_by('-starts_at')
+    return contests

@@ -61,6 +61,7 @@ class Problem(db.Document):
 class Contest(db.Document):
     name = db.StringField(required=True, unique=True)
     owner = db.ReferenceField('User', required=True)
+    admins = db.ListField(db.ReferenceField('User', reverse_delete_rule=db.PULL))
     created_at = db.IntField(required=True, default=lambda: utcnowts())
     starts_at = db.IntField(required=True)
     ends_at = db.IntField(required=True)
@@ -113,6 +114,13 @@ class Contest(db.Document):
         return dict(
             problems = [prob.to_json_abs() for prob in self.problems]
         )
+
+
+    def to_json_admins(self):
+        return dict(
+            admins = [admin.to_json_abs() for admin in self.admins]
+        )
+
 
 
 class ContestDateTimeException(db.ValidationError):

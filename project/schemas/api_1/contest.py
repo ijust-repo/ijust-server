@@ -45,3 +45,14 @@ problem_edit_schema = Schema({
 problem_change_order_schema = Schema({
     Required('order'): [Schema(int)]
 })
+
+
+
+admin_add_schema = Schema({
+    Required('username'): unicode
+})
+
+
+admin_remove_schema = Schema({
+    Required('user_id'): unicode
+})
