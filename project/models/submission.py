@@ -56,12 +56,19 @@ class Submission(db.Document):
         )
 
 
-    @property
-    def code(self):
-        with open(self.code_addr, 'r') as f:
-            return f.read()
-
-
     def populate(self, json):
         self.filename = json['filename']
         self.prog_lang = json['prog_lang']
+
+
+    def to_json(self):
+        return dict(
+            id = str(self.pk),
+            filename = self.filename,
+            prog_lang = self.prog_lang.name,
+            submitted_at = self.submitted_at,
+            problem = self.problem.to_json_abs(),
+            user = self.user.to_json_abs(),
+            status = self.status.name,
+            reason = self.reason
+        )
