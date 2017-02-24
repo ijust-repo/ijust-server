@@ -292,7 +292,7 @@ def download_code(sid):
         description: Token of current user
     responses:
       200:
-        description: Problem body file
+        description: Code file
       401:
         description: Token is invalid or has expired
       403:
