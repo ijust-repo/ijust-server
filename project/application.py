@@ -53,6 +53,10 @@ def configure_errorhandlers(app):
     def forbidden(error):
         return (jsonify(error=error.description), 403) if app.config['DEBUG'] else ("", 403)
 
+    @app.errorhandler(404)
+    def not_found(error):
+        return (jsonify(error=error.description), 404) if app.config['DEBUG'] else ("", 404)
+
     @app.errorhandler(406)
     def not_acceptable(error):
         return (jsonify(error=error.description), 406) if app.config['DEBUG'] else ("", 406)
