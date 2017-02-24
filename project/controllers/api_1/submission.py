@@ -70,7 +70,7 @@ def create():
       404:
         description: Contest or problem or team does not exist
       406:
-        description: Contest not started or has been finished
+        description: Contest has not started or has been finished
       413:
         description: Request entity too large. (max is 4mg)
     """
@@ -95,7 +95,7 @@ def create():
 
         now = utcnowts()
         if now < contest_obj.starts_at or now > contest_obj.ends_at:
-            return jsonify(errors="Contest not started or has been finished"), 406
+            return jsonify(errors="Contest has not started or has been finished"), 406
 
         obj = Submission()
         obj.populate(json)

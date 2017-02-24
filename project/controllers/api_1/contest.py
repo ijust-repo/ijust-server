@@ -344,6 +344,60 @@ def list_all():
     return contests
 
 
+@app.api_route('team/<string:tid>', methods=['GET'])
+@auth.authenticate
+def list_team(tid):
+    """
+    Get Contests List of a Team
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: tid
+        in: path
+        type: string
+        required: true
+        description: Id of team
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Team contests list
+        schema:
+          id: TeamContestsList
+          type: object
+          properties:
+            waiting_contests:
+              type: array
+              items:
+                schema:
+                  $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
+            joined_contests:
+              type: array
+              items:
+                schema:
+                  $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
+      401:
+        description: Token is invalid or has expired
+      404:
+        description: Team does not exist
+    """
+
+    try:
+        obj = Team.objects().get(pk=tid)
+        wc = Contest.objects().filter(pending_teams=obj)
+        wc = [c.to_json() for c in wc]
+        jc = Contest.objects().filter(accepted_teams=obj)
+        jc = [c.to_json() for c in jc]
+
+        return jsonify(waiting_contests=wc, joined_contests=jc), 200
+    except (db.DoesNotExist, db.ValidationError):
+        return jsonify(errors='Team does not exist'), 404
+
+
 
 @app.api_route('<string:cid>/team', methods=['PATCH'])
 @app.api_validate('contest.team_join_schema')
