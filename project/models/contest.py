@@ -99,7 +99,8 @@ class Contest(db.Document):
             owner = self.owner.to_json_abs(),
             created_at = self.created_at,
             starts_at = self.starts_at,
-            ends_at = self.ends_at
+            ends_at = self.ends_at,
+            is_active = True if utcnowts() >= self.starts_at else False
         )
 
 

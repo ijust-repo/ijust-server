@@ -139,6 +139,9 @@ def info(cid):
             ends_at:
               type: integer
               description: Contest ends_at (utc timestamp)
+            is_active:
+              type: boolean
+              description: Contest is_active
       401:
         description: Token is invalid or has expired
       404:
@@ -234,7 +237,7 @@ def edit(cid):
 @auth.authenticate
 def list():
     """
-    Get My Contests List
+    Get All Contests List
     ---
     tags:
       - contest
@@ -298,17 +301,16 @@ def list():
         description: Token is invalid or has expired
     """
 
-    user_obj = User.objects().get(pk=g.user_id)
-    contests = Contest.objects().filter(owner=user_obj).order_by('-starts_at')
+    contests = Contest.objects().order_by('-starts_at')
     return contests
 
 
-@app.api_route('all', methods=['GET'])
+@app.api_route('owner', methods=['GET'])
 @paginate('contests', 20)
 @auth.authenticate
-def list_all():
+def list_owner():
     """
-    Get All Contests List
+    Get Owner Contests
     ---
     tags:
       - contest
@@ -337,7 +339,8 @@ def list_all():
         description: Token is invalid or has expired
     """
 
-    contests = Contest.objects().order_by('-starts_at')
+    user_obj = User.objects().get(pk=g.user_id)
+    contests = Contest.objects().filter(owner=user_obj).order_by('-starts_at')
     return contests
 
 
@@ -1476,7 +1479,7 @@ def admin_list(cid):
 @auth.authenticate
 def admin_contests():
     """
-    Admin Contests
+    Get Admin Contests
     ---
     tags:
       - contest
