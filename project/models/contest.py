@@ -126,8 +126,8 @@ class Contest(db.Document):
 
     def to_json_teams(self):
         return dict(
-            pending_teams = [team.to_json_abs() for team in self.pending_teams],
-            accepted_teams = [team.to_json_abs() for team in self.accepted_teams]
+            pending_teams = [team.to_json() for team in self.pending_teams],
+            accepted_teams = [team.to_json() for team in self.accepted_teams]
         )
 
 

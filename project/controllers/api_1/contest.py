@@ -602,7 +602,7 @@ def team_list(cid):
               type: array
               items:
                 schema:
-                  $ref: "#/definitions/api_1_contest_team_list_get_TeamAbsInfo"
+                  $ref: "#/definitions/api_1_team_info_get_TeamInfo"
       401:
         description: Token is invalid or has expired
       403:
