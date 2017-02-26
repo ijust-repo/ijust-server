@@ -399,7 +399,7 @@ def list_team(tid):
 
 
 
-@app.api_route('<string:cid>/team', methods=['PATCH'])
+@app.api_route('<string:cid>/team', methods=['POST'])
 @app.api_validate('contest.team_join_schema')
 @auth.authenticate
 def team_join(cid):
@@ -460,10 +460,9 @@ def team_join(cid):
         return abort(404, "Contest or Team does not exist")
 
 
-@app.api_route('<string:cid>/team', methods=['DELETE'])
-@app.api_validate('contest.team_unjoin_schema')
+@app.api_route('<string:cid>/team/<string:tid>', methods=['DELETE'])
 @auth.authenticate
-def team_unjoin(cid):
+def team_unjoin(cid, tid):
     """
     Team Unjoin
     ---
@@ -475,12 +474,11 @@ def team_unjoin(cid):
         type: string
         required: true
         description: Id of contest
-      - name: body
-        in: body
-        description: Team Identification
+      - name: tid
+        in: path
+        type: string
         required: true
-        schema:
-          $ref: "#/definitions/api_1_contest_team_join_patch_TeamIdentification"
+        description: Id of team
       - name: Access-Token
         in: header
         type: string
@@ -499,10 +497,9 @@ def team_unjoin(cid):
         description: Contest or Team does not exist
     """
 
-    json = request.json
     try:
         obj = Contest.objects().get(pk=cid)
-        team_obj = Team.objects().get(pk=json['team_id'])
+        team_obj = Team.objects().get(pk=tid)
 
         if str(team_obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the team")
@@ -580,7 +577,7 @@ def team_list(cid):
         return abort(404, "Contest does not exist")
 
 
-@app.api_route('<string:cid>/team/<string:tid>', methods=['PATCH'])
+@app.api_route('<string:cid>/team/<string:tid>/acceptation', methods=['PATCH'])
 @auth.authenticate
 def team_accept(cid, tid):
     """
@@ -634,7 +631,7 @@ def team_accept(cid, tid):
         return abort(404, "Contest or Team does not exist")
 
 
-@app.api_route('<string:cid>/team/<string:tid>', methods=['DELETE'])
+@app.api_route('<string:cid>/team/<string:tid>/acceptation', methods=['DELETE'])
 @auth.authenticate
 def team_reject(cid, tid):
     """
@@ -1302,7 +1299,7 @@ def problem_download_body(cid, pid):
 
 
 
-@app.api_route('<string:cid>/admin', methods=['PATCH'])
+@app.api_route('<string:cid>/admin', methods=['POST'])
 @app.api_validate('contest.admin_add_schema')
 @auth.authenticate
 def admin_add(cid):
@@ -1364,10 +1361,9 @@ def admin_add(cid):
         return abort(404, "Contest or user does not exist")
 
 
-@app.api_route('<string:cid>/admin', methods=['DELETE'])
-@app.api_validate('contest.admin_remove_schema')
+@app.api_route('<string:cid>/admin/<string:uid>', methods=['DELETE'])
 @auth.authenticate
-def admin_remove(cid):
+def admin_remove(cid, uid):
     """
     Admin Remove
     ---
@@ -1379,17 +1375,11 @@ def admin_remove(cid):
         type: string
         required: true
         description: Id of contest
-      - name: body
-        in: body
-        description: Problem information
+      - name: uid
+        in: path
+        type: string
         required: true
-        schema:
-          id: AdminIdentificationId
-          required:
-            - user_id
-          properties:
-            user_id:
-              type: string
+        description: Id of user
       - name: Access-Token
         in: header
         type: string
@@ -1410,13 +1400,12 @@ def admin_remove(cid):
         description: Contest or user does not exist
     """
 
-    json = request.json
     try:
         obj = Contest.objects().get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the contest")
 
-        user_obj = User.objects().get(pk=json['user_id'])
+        user_obj = User.objects().get(pk=uid)
 
         obj.update(pull__admins=user_obj)
         obj.reload()

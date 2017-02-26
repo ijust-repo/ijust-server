@@ -24,9 +24,6 @@ team_join_schema = Schema({
 })
 
 
-team_unjoin_schema = team_join_schema
-
-
 
 problem_create_schema = Schema({
     Required('title'): All(unicode, Length(max=32)),
@@ -50,9 +47,4 @@ problem_change_order_schema = Schema({
 
 admin_add_schema = Schema({
     Required('username'): unicode
-})
-
-
-admin_remove_schema = Schema({
-    Required('user_id'): unicode
 })
