@@ -20,7 +20,7 @@ def paginate(key, max_per_page, **pkwargs):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            query = f(*args, **kwargs)
+            query, result_func = f(*args, **kwargs)
 
             page = request.args.get('page', 1, type=int)
             per_page = min(
@@ -77,13 +77,8 @@ def paginate(key, max_per_page, **pkwargs):
                 **kwargs
             )
 
-            to_json_params = {}
-            for param in pkwargs:
-                if 'to_json_' in param:
-                    to_json_params[param[8:]] = pkwargs[param]
-
             return jsonify({
-                str(key): [item.to_json(**to_json_params) for item in pagination_obj.items],
+                str(key): [result_func(item) for item in pagination_obj.items],
                 'meta': meta
             })
 

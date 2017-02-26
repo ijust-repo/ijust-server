@@ -302,7 +302,8 @@ def list():
     """
 
     contests = Contest.objects().order_by('-starts_at')
-    return contests
+    result_func = lambda obj: Contest.to_json(obj)
+    return contests, result_func
 
 
 @app.api_route('owner', methods=['GET'])
@@ -341,7 +342,8 @@ def list_owner():
 
     user_obj = User.objects().get(pk=g.user_id)
     contests = Contest.objects().filter(owner=user_obj).order_by('-starts_at')
-    return contests
+    result_func = lambda obj: Contest.to_json(obj)
+    return contests, result_func
 
 
 @app.api_route('team/<string:tid>', methods=['GET'])
@@ -1499,4 +1501,5 @@ def admin_contests():
 
     user_obj = User.objects().get(pk=g.user_id)
     contests = Contest.objects().filter(admins=user_obj).order_by('-starts_at')
-    return contests
+    result_func = lambda obj: Contest.to_json(obj)
+    return contests, result_func
