@@ -66,7 +66,7 @@ def create():
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't allowed to submit
+        description: You aren't owner or member of the team
       404:
         description: Contest or problem or team does not exist
       406:
@@ -88,15 +88,13 @@ def create():
         json = form.to_json()
         code = form.code.data
 
-        contest_obj = Contest.objects().get(pk=json['contest_id'])
         problem_obj = Problem.objects().get(pk=json['problem_id'])
         team_obj = Team.objects().get(pk=json['team_id'])
+        contest_obj = Contest.objects().get(pk=json['contest_id'], accepted_teams=team_obj, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
-        if (not problem_obj in contest_obj.problems) or \
-            (not team_obj in contest_obj.accepted_teams) or \
-            (user_obj != team_obj.owner and not user_obj in team_obj.members):
-            return abort(403, "You aren't allowed to submit")
+        if user_obj != team_obj.owner and not user_obj in team_obj.members:
+            return abort(403, "You aren't owner or member of the team")
 
         now = utcnowts()
         if now < contest_obj.starts_at or now > contest_obj.ends_at:
@@ -191,11 +189,10 @@ def list(tid, cid):
 
     try:
         team_obj = Team.objects().get(pk=tid)
-        contest_obj = Contest.objects().get(pk=cid)
+        contest_obj = Contest.objects().get(pk=cid, accepted_teams=team_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
-        if (not team_obj in contest_obj.accepted_teams) or \
-            (user_obj != team_obj.owner and not user_obj in team_obj.members):
+        if user_obj != team_obj.owner and not user_obj in team_obj.members:
             return abort(403, "You aren't owner or member of the team")
 
         submissions = Submission.objects().filter(
@@ -255,13 +252,11 @@ def list_problem(tid, cid, pid):
 
     try:
         team_obj = Team.objects().get(pk=tid)
-        contest_obj = Contest.objects().get(pk=cid)
         problem_obj = Problem.objects().get(pk=pid)
+        contest_obj = Contest.objects().get(pk=cid, accepted_teams=team_obj, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
-        if (not problem_obj in contest_obj.problems) or \
-            (not team_obj in contest_obj.accepted_teams) or \
-            (user_obj != team_obj.owner and not user_obj in team_obj.members):
+        if user_obj != team_obj.owner and not user_obj in team_obj.members:
             return abort(403, "You aren't owner or member of the team")
 
         submissions = Submission.objects().filter(
