@@ -77,6 +77,16 @@ class Contest(db.Document):
         return False
 
 
+    def user_joining_status(self, user_obj):
+        for team in self.accepted_teams:
+            if team.owner == user_obj or user_obj in team.members:
+                return 2, team
+        for team in self.pending_teams:
+            if team.owner == user_obj or user_obj in team.members:
+                return 1, team
+        return 0, None
+
+
     def populate(self, json):
         if 'name' in json:
             self.name = json['name']
@@ -102,6 +112,16 @@ class Contest(db.Document):
             ends_at = self.ends_at,
             is_active = True if utcnowts() >= self.starts_at else False
         )
+
+
+    def to_json_user(self, user_obj):
+        json = self.to_json()
+        status, team = self.user_joining_status(user_obj)
+        json['joining_status'] = dict(
+            status=status,
+            team=team.to_json_abs() if team else None
+        )
+        return json
 
 
     def to_json_teams(self):

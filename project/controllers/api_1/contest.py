@@ -268,7 +268,50 @@ def list():
               type: array
               items:
                 schema:
-                  $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
+                  id: ContestInfoUser
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Contest id
+                    name:
+                      type: string
+                      description: Contest name
+                    owner:
+                      description: Owner info
+                      schema:
+                          id: ContestOwnerInfo
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Owner id
+                            username:
+                              type: string
+                              description: Owner username
+                    created_at:
+                      type: integer
+                      description: Contest created_at (utc timestamp)
+                    starts_at:
+                      type: integer
+                      description: Contest starts_at (utc timestamp)
+                    ends_at:
+                      type: integer
+                      description: Contest ends_at (utc timestamp)
+                    is_active:
+                      type: boolean
+                      description: Contest is_active
+                    joining_status:
+                      type: object
+                      description: Contest user joining status
+                      schema:
+                        properties:
+                          status:
+                            type: integer
+                            description: joining status (0=not_joined, 1=waiting, 2=joined)
+                          team:
+                            schema:
+                              $ref: "#/definitions/api_1_contest_team_list_get_TeamAbsInfo"
             meta:
               type: object
               description: Pagination meta data
@@ -301,8 +344,9 @@ def list():
         description: Token is invalid or has expired
     """
 
+    user_obj = User.objects().get(pk=g.user_id)
     contests = Contest.objects().order_by('-starts_at')
-    result_func = lambda obj: Contest.to_json(obj)
+    result_func = lambda obj: Contest.to_json_user(obj, user_obj)
     return contests, result_func
 
 
