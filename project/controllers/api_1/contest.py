@@ -544,13 +544,13 @@ def team_unjoin(cid, tid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
         team_obj = Team.objects().get(pk=tid)
+        obj = Contest.objects().get(pk=cid, pending_teams=team_obj)
 
         if str(team_obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the team")
 
-        obj.update(pull__pending_teams=team_obj, pull__accepted_teams=team_obj)
+        obj.update(pull__pending_teams=team_obj)
         return '', 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest or Team does not exist")
@@ -656,20 +656,15 @@ def team_accept(cid, tid):
         description: You aren't owner or admin of the contest
       404:
         description: Contest or Team does not exist
-      406:
-        description: The team has not requested to join
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        team_obj = Team.objects().get(pk=tid)
+        obj = Contest.objects().get(pk=cid, pending_teams=team_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
-
-        team_obj = Team.objects().get(pk=tid)
-        if not team_obj in obj.pending_teams:
-            return abort(406, "The team has not requested to join")
 
         obj.update(pull__pending_teams=team_obj, add_to_set__accepted_teams=team_obj)
         return '', 200
@@ -710,20 +705,15 @@ def team_reject(cid, tid):
         description: You aren't owner or admin of the contest
       404:
         description: Contest or Team does not exist
-      406:
-        description: The team has not requested to join
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        team_obj = Team.objects().get(pk=tid)
+        obj = Contest.objects().get(pk=cid, pending_teams=team_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
-
-        team_obj = Team.objects().get(pk=tid)
-        if not team_obj in obj.pending_teams:
-            return abort(406, "The team has not requested to join")
 
         obj.update(pull__pending_teams=team_obj)
         return '', 200
@@ -862,7 +852,8 @@ def problem_info(cid, pid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        problem_obj = Problem.objects().get(pk=pid)
+        obj = Contest.objects().get(pk=cid, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
         now = utcnowts()
 
@@ -871,7 +862,6 @@ def problem_info(cid, pid):
                (now > obj.ends_at)):
             return abort(403, "You aren't allowed to see problem")
 
-        problem_obj = Problem.objects().get(pk=pid)
         return jsonify(problem_obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest or problem does not exist")
@@ -1002,19 +992,19 @@ def problem_edit(cid, pid):
 
     json = request.json
     try:
-        obj = Contest.objects().get(pk=cid)
+        problem_obj = Problem.objects().get(pk=pid)
+        obj = Contest.objects().get(pk=cid, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
 
-        problem_obj = Problem.objects().get(pk=pid)
         problem_obj.populate(json)
         problem_obj.save()
         return jsonify(problem_obj.to_json()), 200
 
     except (db.DoesNotExist, db.ValidationError):
-        return abort(404, "Contest does not exist")
+        return abort(404, "Contest or problem does not exist")
 
 
 @app.api_route('<string:cid>/problem', methods=['PATCH'])
@@ -1133,7 +1123,8 @@ def problem_delete(cid, pid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        problem_obj = Problem.objects().get(pk=pid)
+        obj = Contest.objects().get(pk=cid, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
@@ -1142,7 +1133,6 @@ def problem_delete(cid, pid):
         if utcnowts() >= obj.starts_at:
             return abort(406, "Contest has been started")
 
-        problem_obj = Problem.objects().get(pk=pid)
         problem_obj.delete()
         obj.reload()
         return jsonify(obj.to_json_problems()), 200
@@ -1197,7 +1187,8 @@ def problem_upload_body(cid, pid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        problem_obj = Problem.objects().get(pk=pid)
+        obj = Contest.objects().get(pk=cid, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
@@ -1210,7 +1201,6 @@ def problem_upload_body(cid, pid):
         if not form.validate_file():
             return abort(415, "Supported file type is only application/pdf")
 
-        problem_obj = Problem.objects().get(pk=pid)
         file_obj = form.body.data
         file_obj.save(problem_obj.body_addr)
 
@@ -1266,7 +1256,8 @@ def problem_upload_testcase(cid, pid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        problem_obj = Problem.objects().get(pk=pid)
+        obj = Contest.objects().get(pk=cid, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
@@ -1279,7 +1270,6 @@ def problem_upload_testcase(cid, pid):
         if not form.validate_file():
             return abort(415, "Supported file type is only application/zip")
 
-        problem_obj = Problem.objects().get(pk=pid)
         if os.path.exists(problem_obj.testcase_dir):
             shutil.rmtree(problem_obj.testcase_dir)
 
@@ -1324,11 +1314,12 @@ def problem_download_body(cid, pid):
       403:
         description: You aren't allowed to see problem body
       404:
-        description: Contest or problem does not exist
+        description: (Contest or problem does not exist, File does not exist)
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        problem_obj = Problem.objects().get(pk=pid)
+        obj = Contest.objects().get(pk=cid, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
         now = utcnowts()
 
@@ -1337,9 +1328,9 @@ def problem_download_body(cid, pid):
                (now > obj.ends_at)):
             return abort(403, "You aren't allowed to see problem body")
 
-        problem_obj = Problem.objects().get(pk=pid)
         return send_file(problem_obj.body_addr)
-
+    except IOError:
+        return abort(404, "File does not exist")
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest or problem does not exist")
 
