@@ -301,6 +301,12 @@ def list():
                     is_active:
                       type: boolean
                       description: Contest is_active
+                    is_owner:
+                      type: boolean
+                      description: Contest is_owner
+                    is_admin:
+                      type: boolean
+                      description: Contest is_admin
                     joining_status:
                       type: object
                       description: Contest user joining status

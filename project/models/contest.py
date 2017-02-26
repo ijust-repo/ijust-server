@@ -121,6 +121,8 @@ class Contest(db.Document):
             status=status,
             team=team.to_json_abs() if team else None
         )
+        json['is_owner'] = user_obj == self.owner
+        json['is_admin'] = user_obj in self.admins
         return json
 
 
