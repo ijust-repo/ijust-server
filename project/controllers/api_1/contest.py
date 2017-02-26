@@ -261,7 +261,7 @@ def list():
       200:
         description: List of contests
         schema:
-          id: ContestsList
+          id: ContestsListUser
           type: object
           properties:
             contests:
@@ -385,7 +385,14 @@ def list_owner():
       200:
         description: List of contests
         schema:
-          $ref: "#/definitions/api_1_contest_list_get_ContestsList"
+          id: ContestsList
+          type: object
+          properties:
+            contests:
+              type: array
+              items:
+                schema:
+                  $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
       401:
         description: Token is invalid or has expired
     """
@@ -592,18 +599,7 @@ def team_list(cid):
               type: array
               items:
                 schema:
-                  id: TeamAbsInfo
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      description: Team id
-                    name:
-                      type: string
-                      description: Team name
-                    owner:
-                      schema:
-                        $ref: "#/definitions/api_1_user_info_get_UserInfo"
+                  $ref: "#/definitions/api_1_team_info_get_TeamInfo"
             accepted_teams:
               type: array
               items:
@@ -1535,7 +1531,7 @@ def admin_contests():
       200:
         description: List of contests
         schema:
-          $ref: "#/definitions/api_1_contest_list_get_ContestsList"
+          $ref: "#/definitions/api_1_contest_list_owner_get_ContestsList"
       401:
         description: Token is invalid or has expired
     """
