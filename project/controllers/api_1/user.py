@@ -2,7 +2,7 @@
 __author__ = 'AminHP'
 
 # flask imports
-from flask import jsonify, request, g, redirect, url_for, abort
+from flask import jsonify, request, g, abort
 
 # project imports
 from project import app
@@ -226,4 +226,4 @@ def myinfo():
         description: User does not exist
     """
 
-    return redirect(url_for('api_1.user.info', uid=g.user_id))
+    return info(uid=g.user_id)
