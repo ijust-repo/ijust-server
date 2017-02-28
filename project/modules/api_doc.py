@@ -19,7 +19,11 @@ class ApiDoc(object):
     def init_app(self, app):
         self.app = app
 
-        app.config['SWAGGER'] = {"swagger_version": "2.0", "specs": self.get_specs()}
+        app.config['SWAGGER'] = {
+            "swagger_version": "2.0",
+            "headers": [],
+            "specs": self.get_specs()
+        }
         self.swagger.init_app(self.app)
 
 
