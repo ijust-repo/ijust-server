@@ -1491,7 +1491,7 @@ def admin_add(cid):
         user_obj = User.objects().get(username=json['username'])
         if user_obj != obj.owner:
             obj.update(add_to_set__admins=user_obj)
-            obj.reload()
+        obj.reload()
 
         return jsonify(obj.to_json_admins()), 201
     except (db.DoesNotExist, db.ValidationError):
