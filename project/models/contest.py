@@ -58,6 +58,105 @@ class Problem(db.Document):
 
 
 
+class Result(db.Document):
+    teams = db.DictField()
+
+    default_team_data = dict(
+        problems = {},
+        solved_count = 0,
+        penalty = 0
+    )
+
+    default_problem_data = dict(
+        submitted_at = None,
+        failed_tries = 0,
+        penalty = 0,
+        solved = False
+    )
+
+
+    @staticmethod
+    def _make_query_ids(tid, pid):
+        tqid = "teams__%s" % tid
+        pqid = "teams__%s__problems__%s" % (tid, pid)
+        return tqid, pqid
+
+
+    def _check_existence(self, tid, pid):
+        tqid, pqid = self._make_query_ids(tid, pid)
+
+        find_query = {
+            'pk': str(self.pk),
+            tqid: None
+        }
+        update_query = {tqid: self.default_team_data}
+        Result.objects(**find_query).update(**update_query)
+
+        update_query = {("set__%s" % pqid): self.default_problem_data}
+        find_query = {
+            'pk': str(self.pk),
+            pqid: None
+        }
+        Result.objects(**find_query).update(**update_query)
+
+
+    def update_failed_try(self, tid, pid, submitted_at, penalty=20):
+        self._check_existence(tid, pid)
+        tqid, pqid = self._make_query_ids(tid, pid)
+
+        find_query = {
+            'pk': str(self.pk),
+            ("%s__solved" % pqid): False
+        }
+        update_query = {
+            ("set__%s__submitted_at" % pqid): submitted_at,
+            ("inc__%s__failed_tries" % pqid): 1,
+            ("inc__%s__penalty" % pqid): penalty
+        }
+        Result.objects(**find_query).update(**update_query)
+
+
+    def update_succeed_try(self, tid, pid, submitted_at, contest_starts_at):
+        self._check_existence(tid, pid)
+        tqid, pqid = self._make_query_ids(tid, pid)
+
+        find_query = {
+            'pk': str(self.pk),
+            ("%s__solved"% pqid): False
+        }
+        update_query = {
+            ("set__%s__submitted_at" % pqid): submitted_at,
+            ("set__%s__solved" % pqid): True,
+            ("inc__%s__penalty" % pqid): (submitted_at - contest_starts_at) // 60,
+            ("inc__%s__solved_count" % tqid): 1
+        }
+
+        if Result.objects(**find_query).update(**update_query):
+            aggregate_query = [
+                {
+                    "$match": {
+                        "_id": self.pk
+                    }
+                },
+                {
+                    '$project': {
+                        'last_penalty': ('$teams.%s.problems.%s.penalty' % (tid, pid))
+                    }
+                }
+            ]
+            aggregate_result = list(Result.objects.aggregate(*aggregate_query))
+            last_penalty = aggregate_result[0]['last_penalty']
+            update_query = {
+                ("inc__%s__penalty" % tqid): last_penalty
+            }
+            Result.objects(pk=str(self.pk)).update(**update_query)
+
+
+    def to_json(self):
+        return self.teams
+
+
+
 class Contest(db.Document):
     name = db.StringField(required=True, unique=True)
     owner = db.ReferenceField('User', required=True)
@@ -68,6 +167,14 @@ class Contest(db.Document):
     pending_teams = db.ListField(db.ReferenceField('Team', reverse_delete_rule=db.PULL))
     accepted_teams = db.ListField(db.ReferenceField('Team', reverse_delete_rule=db.PULL))
     problems = db.ListField(db.ReferenceField('Problem', reverse_delete_rule=db.PULL))
+    result = db.ReferenceField('Result')
+
+
+    def create_result(self):
+        result_obj = Result()
+        result_obj.save()
+        self.result = result_obj
+        self.save()
 
 
     def is_user_in_contest(self, user_obj):
@@ -126,6 +233,12 @@ class Contest(db.Document):
         return json
 
 
+    def to_json_admins(self):
+        return dict(
+            admins = [admin.to_json_abs() for admin in self.admins]
+        )
+
+
     def to_json_teams(self):
         return dict(
             pending_teams = [team.to_json() for team in self.pending_teams],
@@ -139,9 +252,11 @@ class Contest(db.Document):
         )
 
 
-    def to_json_admins(self):
+    def to_json_result(self):
         return dict(
-            admins = [admin.to_json_abs() for admin in self.admins]
+            result = self.result.to_json(),
+            teams = {str(t.pk): t.name for t in self.accepted_teams},
+            problems = {str(p.pk): p.title for p in self.problems}
         )
 
 

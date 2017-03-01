@@ -14,7 +14,7 @@ from project import app
 from project.extensions import db, auth
 from project.modules.datetime import utcnowts
 from project.modules.paginator import paginate
-from project.models.contest import Problem, Contest, ContestDateTimeException
+from project.models.contest import Contest, Problem, ContestDateTimeException
 from project.models.team import Team
 from project.models.user import User
 from project.forms.problem import UploadProblemBody, UploadTestCase
@@ -43,7 +43,6 @@ def create():
           properties:
             name:
               type: string
-              pattern: ^[a-zA-Z0-9_]+$
               example: babyknight
               maxLength: 32
             starts_at:
@@ -78,6 +77,7 @@ def create():
         obj.owner = User.objects().get(id=g.user_id)
         obj.populate(json)
         obj.save()
+        obj.create_result()
         return jsonify(obj.to_json()), 201
 
     except db.NotUniqueError:
@@ -179,7 +179,6 @@ def edit(cid):
           properties:
             name:
               type: string
-              pattern: ^[a-zA-Z0-9_]+$
               example: babyknight
               maxLength: 32
             starts_at:
@@ -403,6 +402,102 @@ def list_owner():
     return contests, result_func
 
 
+@app.api_route('<string:cid>/result', methods=['GET'])
+@auth.authenticate
+def result(cid):
+    """
+    Get Result
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Result information
+        schema:
+          id: ContestResult
+          type: object
+          properties:
+            result:
+              type: object
+              description: The result must be sorted by solved_count, then by penalty
+              properties:
+                team_id*:
+                  type: object
+                  description: Teams result dictionary (team_id => team_data). 
+                               Teams without submission aren't in this dictionary
+                  properties:
+                    penalty:
+                      type: integer
+                    solved_count:
+                      type: integer
+                    problems:
+                      type: object
+                      properties:
+                        problem_id*:
+                          type: object
+                          description: Problems result dictionary (problem_id => problem_data). 
+                                       Problems without submission aren't in this dictionary
+                          properties:
+                            submitted_at:
+                              type: integer
+                              description: Last submission time (utc timestmap) (default=null)
+                            failed_tries:
+                              type: integer
+                            penalty:
+                              type: integer
+                            solved:
+                              type: boolean
+            teams:
+              type: object
+              description: Teams dictionary (team_id => team_name)
+              properties:
+                team_id*:
+                  type: string
+                  description: Team name
+            problems:
+              type: object
+              description: Problems dictionary (problem_id => problem_title)
+              properties:
+                problem_id*:
+                  type: string
+                  description: Problem title
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't allowed to see result
+      404:
+        description: Contest does not exist
+    """
+
+    try:
+        obj = Contest.objects().get(pk=cid)
+        user_obj = User.objects().get(pk=g.user_id)
+        now = utcnowts()
+
+        if not (user_obj == obj.owner or user_obj in obj.admins or \
+               (now >= obj.starts_at and obj.is_user_in_contest(user_obj)) or \
+               (now > obj.ends_at)):
+            return abort(403, "You aren't allowed to see result")
+
+        return jsonify(obj.to_json_result()), 200
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "Contest does not exist")
+
+
+################################# Team #################################
+
+
 @app.api_route('team/<string:tid>', methods=['GET'])
 @auth.authenticate
 def list_team(tid):
@@ -455,7 +550,6 @@ def list_team(tid):
         return jsonify(waiting_contests=wc, joined_contests=jc), 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Team does not exist")
-
 
 
 @app.api_route('<string:cid>/team', methods=['POST'])
@@ -722,6 +816,8 @@ def team_reject(cid, tid):
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest or Team does not exist")
 
+
+################################# Problem #################################
 
 
 @app.api_route('<string:cid>/problem', methods=['POST'])
@@ -1336,6 +1432,8 @@ def problem_download_body(cid, pid):
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest or problem does not exist")
 
+
+################################# Admin #################################
 
 
 @app.api_route('<string:cid>/admin', methods=['POST'])

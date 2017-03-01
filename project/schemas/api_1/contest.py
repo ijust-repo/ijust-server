@@ -5,14 +5,14 @@ from good import Schema, All, Any, Required, Optional, Length, Range, Match, Def
 
 
 create_schema = Schema({
-    Required('name'): All(unicode, Match(r'^[a-zA-Z0-9_]+$'), Length(max=32)),
+    Required('name'): All(unicode, Length(max=32)),
     Required('starts_at'): int,
     Required('ends_at'): int
 })
 
 
 edit_schema = Schema({
-    Optional('name'): All(unicode, Match(r'^[a-zA-Z0-9_]+$'), Length(max=32)),
+    Optional('name'): All(unicode, Length(max=32)),
     Optional('starts_at'): int,
     Optional('ends_at'): int
 })
