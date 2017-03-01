@@ -2,8 +2,6 @@
 
 # local config file
 
-SECRET_KEY = 'Sm9obiBTY2hyb20ga2lja3MgYXNz'
-
-STRIPE_API_KEY = 'SmFjb2IgS2FwbGFuLU1vc3MgaXMgYSBoZXJv'
-
-SQLALCHEMY_DATABASE_URI = "postgresql://user:admin@localhost/databasename"
+RECAPTCHA_ENABLED = True
+RECAPTCHA_SITE_KEY = "6LeDPwcTAAAAADVt4vp-kdTHXcbl76JbRFK3PUV5"
+RECAPTCHA_SECRET_KEY = "6LeDPwcTAAAAAKF5mXqJpKqo1NW2nntCrjyFwi3Q"

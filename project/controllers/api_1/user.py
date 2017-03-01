@@ -43,6 +43,8 @@ def signup():
               example: baby123
               minLength: 3
               maxLength: 32
+            recaptcha:
+              type: string
     responses:
       201:
         description: Successfully registered

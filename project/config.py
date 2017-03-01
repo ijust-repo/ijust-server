@@ -63,6 +63,12 @@ class DefaultConfig(object):
         'port': 27017
     }
 
+    # recaptcha
+
+    RECAPTCHA_ENABLED = False
+    RECAPTCHA_SITE_KEY = "6LeDPwcTAAAAADVt4vp-kdTHXcbl76JbRFK3PUV5"
+    RECAPTCHA_SECRET_KEY = "6LeDPwcTAAAAAKF5mXqJpKqo1NW2nntCrjyFwi3Q"
+
 
 class DevelopmentConfig(DefaultConfig):
     # app
@@ -72,6 +78,10 @@ class DevelopmentConfig(DefaultConfig):
     # cache
 
     CACHE_TYPE = 'filesystem'
+
+    # recaptcha
+
+    RECAPTCHA_ENABLED = True
 
 
 class DeploymentConfig(DefaultConfig):
@@ -84,6 +94,10 @@ class DeploymentConfig(DefaultConfig):
 
     CACHE_TYPE = 'redis'
 
+    # recaptcha
+
+    RECAPTCHA_ENABLED = True
+
 
 class TestingConfig(DefaultConfig):
     # app
@@ -94,3 +108,7 @@ class TestingConfig(DefaultConfig):
     # cache
 
     CACHE_TYPE = 'filesystem'
+
+    # recaptcha
+
+    RECAPTCHA_ENABLED = False

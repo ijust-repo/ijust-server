@@ -43,7 +43,7 @@ class Validator(object):
                             schema_name = '.'.join(name + [each])
                             schemas[schema_name] = attr
 
-        self.schemas= schemas
+        self.schemas = schemas
 
 
     def validate_schema(self, schema_name, api=False):
