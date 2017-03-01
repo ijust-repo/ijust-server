@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # find . -name \*.pyc -delete
+__author__ = 'AminHP'
 
 # project imports
 from project import app

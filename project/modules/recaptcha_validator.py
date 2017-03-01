@@ -9,6 +9,7 @@ from project.extensions import recaptcha
 
 
 class ReCaptcha(object):
+
     def __call__(self, response):
         if recaptcha.verify(response):
             return response
