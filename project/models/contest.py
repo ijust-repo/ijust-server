@@ -9,6 +9,8 @@ import shutil
 from project import app
 from project.extensions import db
 from project.modules.datetime import utcnowts
+from project.models.user import User
+from project.models.team import Team
 
 
 class Problem(db.Document):
