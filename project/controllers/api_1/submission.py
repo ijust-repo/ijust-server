@@ -125,7 +125,7 @@ def create():
 @auth.authenticate
 def list(tid, cid):
     """
-    Get All The Submissions in a Contest
+    Get All The Team Submissions in a Contest
     ---
     tags:
       - submission
@@ -210,7 +210,7 @@ def list(tid, cid):
 @auth.authenticate
 def list_problem(tid, cid, pid):
     """
-    Get All The Submissions in a Contest for a Problem
+    Get All The Team Submissions in a Contest for a Problem
     ---
     tags:
       - submission
