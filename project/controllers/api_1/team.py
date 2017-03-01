@@ -33,7 +33,6 @@ def create():
           properties:
             name:
               type: string
-              pattern: ^[a-zA-Z0-9_]+$
               example: babyknight
               maxLength: 32
             members:
@@ -169,7 +168,6 @@ def edit(tid):
           properties:
             name:
               type: string
-              pattern: ^[a-zA-Z0-9_]+$
               example: babyknight
               maxLength: 32
             members:
