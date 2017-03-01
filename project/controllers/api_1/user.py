@@ -114,9 +114,9 @@ def login():
 
     try:
         if '@' in login:
-            obj = User.objects().get(email=login)
+            obj = User.objects.get(email=login)
         else:
-            obj = User.objects().get(username=login)
+            obj = User.objects.get(username=login)
 
         if obj.verify_password(password):
             token = auth.generate_token(obj.pk)
@@ -195,7 +195,7 @@ def info(uid):
     """
 
     try:
-        obj = User.objects().get(pk=uid)
+        obj = User.objects.get(pk=uid)
         return jsonify(obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "User does not exist")

@@ -74,7 +74,7 @@ def create():
     json = request.json
     try:
         obj = Contest()
-        obj.owner = User.objects().get(id=g.user_id)
+        obj.owner = User.objects.get(id=g.user_id)
         obj.populate(json)
         obj.save()
         obj.create_result()
@@ -149,7 +149,7 @@ def info(cid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        obj = Contest.objects.get(pk=cid)
         return jsonify(obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest does not exist")
@@ -213,8 +213,8 @@ def edit(cid):
 
     json = request.json
     try:
-        obj = Contest.objects().get(pk=cid)
-        user_obj = User.objects().get(pk=g.user_id)
+        obj = Contest.objects.get(pk=cid)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -349,8 +349,8 @@ def list():
         description: Token is invalid or has expired
     """
 
-    user_obj = User.objects().get(pk=g.user_id)
-    contests = Contest.objects().order_by('-starts_at')
+    user_obj = User.objects.get(pk=g.user_id)
+    contests = Contest.objects.order_by('-starts_at')
     result_func = lambda obj: Contest.to_json_user(obj, user_obj)
     return contests, result_func
 
@@ -396,8 +396,8 @@ def list_owner():
         description: Token is invalid or has expired
     """
 
-    user_obj = User.objects().get(pk=g.user_id)
-    contests = Contest.objects().filter(owner=user_obj).order_by('-starts_at')
+    user_obj = User.objects.get(pk=g.user_id)
+    contests = Contest.objects.filter(owner=user_obj).order_by('-starts_at')
     result_func = lambda obj: Contest.to_json(obj)
     return contests, result_func
 
@@ -481,8 +481,8 @@ def result(cid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
-        user_obj = User.objects().get(pk=g.user_id)
+        obj = Contest.objects.get(pk=cid)
+        user_obj = User.objects.get(pk=g.user_id)
         now = utcnowts()
 
         if not (user_obj == obj.owner or user_obj in obj.admins or \
@@ -541,10 +541,10 @@ def list_team(tid):
     """
 
     try:
-        obj = Team.objects().get(pk=tid)
-        wc = Contest.objects().filter(pending_teams=obj)
+        obj = Team.objects.get(pk=tid)
+        wc = Contest.objects.filter(pending_teams=obj)
         wc = [c.to_json() for c in wc]
-        jc = Contest.objects().filter(accepted_teams=obj)
+        jc = Contest.objects.filter(accepted_teams=obj)
         jc = [c.to_json() for c in jc]
 
         return jsonify(waiting_contests=wc, joined_contests=jc), 200
@@ -598,8 +598,8 @@ def team_join(cid):
 
     json = request.json
     try:
-        obj = Contest.objects().get(pk=cid)
-        team_obj = Team.objects().get(pk=json['team_id'])
+        obj = Contest.objects.get(pk=cid)
+        team_obj = Team.objects.get(pk=json['team_id'])
 
         if str(team_obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the team")
@@ -651,8 +651,8 @@ def team_unjoin(cid, tid):
     """
 
     try:
-        team_obj = Team.objects().get(pk=tid)
-        obj = Contest.objects().get(pk=cid, pending_teams=team_obj)
+        team_obj = Team.objects.get(pk=tid)
+        obj = Contest.objects.get(pk=cid, pending_teams=team_obj)
 
         if str(team_obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the team")
@@ -708,8 +708,8 @@ def team_list(cid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
-        user_obj = User.objects().get(pk=g.user_id)
+        obj = Contest.objects.get(pk=cid)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -755,9 +755,9 @@ def team_accept(cid, tid):
     """
 
     try:
-        team_obj = Team.objects().get(pk=tid)
-        obj = Contest.objects().get(pk=cid, pending_teams=team_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        team_obj = Team.objects.get(pk=tid)
+        obj = Contest.objects.get(pk=cid, pending_teams=team_obj)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -804,9 +804,9 @@ def team_reject(cid, tid):
     """
 
     try:
-        team_obj = Team.objects().get(pk=tid)
-        obj = Contest.objects().get(pk=cid, pending_teams=team_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        team_obj = Team.objects.get(pk=tid)
+        obj = Contest.objects.get(pk=cid, pending_teams=team_obj)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -882,8 +882,8 @@ def problem_create(cid):
 
     json = request.json
     try:
-        obj = Contest.objects().get(pk=cid)
-        user_obj = User.objects().get(pk=g.user_id)
+        obj = Contest.objects.get(pk=cid)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -950,9 +950,9 @@ def problem_info(cid, pid):
     """
 
     try:
-        problem_obj = Problem.objects().get(pk=pid)
-        obj = Contest.objects().get(pk=cid, problems=problem_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        problem_obj = Problem.objects.get(pk=pid)
+        obj = Contest.objects.get(pk=cid, problems=problem_obj)
+        user_obj = User.objects.get(pk=g.user_id)
         now = utcnowts()
 
         if not (user_obj == obj.owner or user_obj in obj.admins or \
@@ -1013,8 +1013,8 @@ def problem_list(cid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
-        user_obj = User.objects().get(pk=g.user_id)
+        obj = Contest.objects.get(pk=cid)
+        user_obj = User.objects.get(pk=g.user_id)
         now = utcnowts()
 
         if not (user_obj == obj.owner or user_obj in obj.admins or \
@@ -1090,9 +1090,9 @@ def problem_edit(cid, pid):
 
     json = request.json
     try:
-        problem_obj = Problem.objects().get(pk=pid)
-        obj = Contest.objects().get(pk=cid, problems=problem_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        problem_obj = Problem.objects.get(pk=pid)
+        obj = Contest.objects.get(pk=cid, problems=problem_obj)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -1158,8 +1158,8 @@ def problem_change_order(cid):
 
     json = request.json
     try:
-        obj = Contest.objects().get(pk=cid)
-        user_obj = User.objects().get(pk=g.user_id)
+        obj = Contest.objects.get(pk=cid)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -1221,9 +1221,9 @@ def problem_delete(cid, pid):
     """
 
     try:
-        problem_obj = Problem.objects().get(pk=pid)
-        obj = Contest.objects().get(pk=cid, problems=problem_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        problem_obj = Problem.objects.get(pk=pid)
+        obj = Contest.objects.get(pk=cid, problems=problem_obj)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -1285,9 +1285,9 @@ def problem_upload_body(cid, pid):
     """
 
     try:
-        problem_obj = Problem.objects().get(pk=pid)
-        obj = Contest.objects().get(pk=cid, problems=problem_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        problem_obj = Problem.objects.get(pk=pid)
+        obj = Contest.objects.get(pk=cid, problems=problem_obj)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -1354,9 +1354,9 @@ def problem_upload_testcase(cid, pid):
     """
 
     try:
-        problem_obj = Problem.objects().get(pk=pid)
-        obj = Contest.objects().get(pk=cid, problems=problem_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        problem_obj = Problem.objects.get(pk=pid)
+        obj = Contest.objects.get(pk=cid, problems=problem_obj)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
@@ -1416,9 +1416,9 @@ def problem_download_body(cid, pid):
     """
 
     try:
-        problem_obj = Problem.objects().get(pk=pid)
-        obj = Contest.objects().get(pk=cid, problems=problem_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        problem_obj = Problem.objects.get(pk=pid)
+        obj = Contest.objects.get(pk=cid, problems=problem_obj)
+        user_obj = User.objects.get(pk=g.user_id)
         now = utcnowts()
 
         if not (user_obj == obj.owner or user_obj in obj.admins or \
@@ -1484,11 +1484,11 @@ def admin_add(cid):
 
     json = request.json
     try:
-        obj = Contest.objects().get(pk=cid)
+        obj = Contest.objects.get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the contest")
 
-        user_obj = User.objects().get(username=json['username'])
+        user_obj = User.objects.get(username=json['username'])
         if user_obj != obj.owner:
             obj.update(add_to_set__admins=user_obj)
         obj.reload()
@@ -1538,11 +1538,11 @@ def admin_remove(cid, uid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        obj = Contest.objects.get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the contest")
 
-        user_obj = User.objects().get(pk=uid)
+        user_obj = User.objects.get(pk=uid)
 
         obj.update(pull__admins=user_obj)
         obj.reload()
@@ -1591,7 +1591,7 @@ def admin_list(cid):
     """
 
     try:
-        obj = Contest.objects().get(pk=cid)
+        obj = Contest.objects.get(pk=cid)
         if str(obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the contest")
 
@@ -1634,7 +1634,7 @@ def admin_contests():
         description: Token is invalid or has expired
     """
 
-    user_obj = User.objects().get(pk=g.user_id)
-    contests = Contest.objects().filter(admins=user_obj).order_by('-starts_at')
+    user_obj = User.objects.get(pk=g.user_id)
+    contests = Contest.objects.filter(admins=user_obj).order_by('-starts_at')
     result_func = lambda obj: Contest.to_json(obj)
     return contests, result_func

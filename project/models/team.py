@@ -14,9 +14,9 @@ class Team(db.Document):
 
     @classmethod
     def teams(cls, user_obj):
-        owner_teams = cls.objects().filter(owner=user_obj)
+        owner_teams = cls.objects.filter(owner=user_obj)
         owner_teams = [t.to_json() for t in owner_teams]
-        member_teams = cls.objects().filter(members=user_obj)
+        member_teams = cls.objects.filter(members=user_obj)
         member_teams = [t.to_json() for t in member_teams]
         return dict(owner_teams=owner_teams, member_teams=member_teams)
 
@@ -30,7 +30,7 @@ class Team(db.Document):
             self.name = json['name']
         if 'members' in json:
             members = filter(lambda un: un != self.owner.username, json['members'])
-            self.members = [User.objects().get(username=username) for username in members]
+            self.members = [User.objects.get(username=username) for username in members]
 
 
     def to_json(self):

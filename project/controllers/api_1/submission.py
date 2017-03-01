@@ -88,10 +88,10 @@ def create():
         json = form.to_json()
         code = form.code.data
 
-        problem_obj = Problem.objects().get(pk=json['problem_id'])
-        team_obj = Team.objects().get(pk=json['team_id'])
-        contest_obj = Contest.objects().get(pk=json['contest_id'], accepted_teams=team_obj, problems=problem_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        problem_obj = Problem.objects.get(pk=json['problem_id'])
+        team_obj = Team.objects.get(pk=json['team_id'])
+        contest_obj = Contest.objects.get(pk=json['contest_id'], accepted_teams=team_obj, problems=problem_obj)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if not team_obj.is_user_in_team(user_obj):
             return abort(403, "You aren't owner or member of the team")
@@ -188,14 +188,14 @@ def list(tid, cid):
     """
 
     try:
-        team_obj = Team.objects().get(pk=tid)
-        contest_obj = Contest.objects().get(pk=cid, accepted_teams=team_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        team_obj = Team.objects.get(pk=tid)
+        contest_obj = Contest.objects.get(pk=cid, accepted_teams=team_obj)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if not team_obj.is_user_in_team(user_obj):
             return abort(403, "You aren't owner or member of the team")
 
-        submissions = Submission.objects().filter(
+        submissions = Submission.objects.filter(
             contest=contest_obj,
             team=team_obj).order_by('-submitted_at')
 
@@ -251,15 +251,15 @@ def list_problem(tid, cid, pid):
     """
 
     try:
-        team_obj = Team.objects().get(pk=tid)
-        problem_obj = Problem.objects().get(pk=pid)
-        contest_obj = Contest.objects().get(pk=cid, accepted_teams=team_obj, problems=problem_obj)
-        user_obj = User.objects().get(pk=g.user_id)
+        team_obj = Team.objects.get(pk=tid)
+        problem_obj = Problem.objects.get(pk=pid)
+        contest_obj = Contest.objects.get(pk=cid, accepted_teams=team_obj, problems=problem_obj)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if not team_obj.is_user_in_team(user_obj):
             return abort(403, "You aren't owner or member of the team")
 
-        submissions = Submission.objects().filter(
+        submissions = Submission.objects.filter(
             contest=contest_obj,
             team=team_obj,
             problem=problem_obj).order_by('-submitted_at')
@@ -302,8 +302,8 @@ def download_code(sid):
     """
 
     try:
-        obj = Submission.objects().get(pk=sid)
-        user_obj = User.objects().get(pk=g.user_id)
+        obj = Submission.objects.get(pk=sid)
+        user_obj = User.objects.get(pk=g.user_id)
 
         if not obj.team.is_user_in_team(user_obj):
             return abort(403, "You aren't owner or member of the team")
@@ -316,5 +316,5 @@ def download_code(sid):
 
 @celery.task()
 def check_code(sid):
-    obj = Submission.objects().get(pk=sid)
+    obj = Submission.objects.get(pk=sid)
     # check submitted code here

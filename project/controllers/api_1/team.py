@@ -65,7 +65,7 @@ def create():
 
     json = request.json
     try:
-        owner = User.objects().get(id=g.user_id)
+        owner = User.objects.get(id=g.user_id)
         my_teams = Team.teams(owner)
         if len(my_teams['owner_teams']) >= 5:
             return abort(406, "You can't create more teams")
@@ -138,7 +138,7 @@ def info(tid):
     """
 
     try:
-        obj = Team.objects().get(pk=tid)
+        obj = Team.objects.get(pk=tid)
         return jsonify(obj.to_json()), 200
     except (db.DoesNotExist, db.ValidationError):
         return abort('404, Team does not exist')
@@ -200,7 +200,7 @@ def edit(tid):
 
     json = request.json
     try:
-        obj = Team.objects().get(pk=tid)
+        obj = Team.objects.get(pk=tid)
         if str(obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the team")
 
@@ -250,6 +250,6 @@ def list():
         description: Token is invalid or has expired
     """
 
-    user_obj = User.objects().get(pk=g.user_id)
+    user_obj = User.objects.get(pk=g.user_id)
     teams = Team.teams(user_obj)
     return jsonify(teams), 200
