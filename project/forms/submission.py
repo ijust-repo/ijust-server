@@ -6,7 +6,7 @@ import magic
 
 # flask imports
 from wtforms import FileField, StringField, IntegerField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms.validators import DataRequired, InputRequired, NumberRange
 from flask.ext.wtf import FlaskForm
 
 # project imports
@@ -17,17 +17,19 @@ class UploadCode(FlaskForm):
     contest_id = StringField(validators=[DataRequired()])
     problem_id = StringField(validators=[DataRequired()])
     team_id = StringField(validators=[DataRequired()])
-    prog_lang = IntegerField(validators=[DataRequired(), NumberRange(min=0, max=len(ProgrammingLanguageType)-1)])
+    prog_lang = IntegerField(validators=[InputRequired(), NumberRange(min=0, max=len(ProgrammingLanguageType)-1)])
     code = FileField(validators=[DataRequired()])
-    allowed_extensions = ['text/plain']
+    #allowed_extensions = ['text/plain', 'text/x-c', 'text/x-java-source', 'text/x-script.pyhton']
+
 
     def validate_file(self):
         data = self.code.data.read(16)
         self.code.data.seek(0)
 
-        if not magic.from_buffer(data, mime=True) in self.allowed_extensions:
-            return False
-        return True
+        #if not magic.from_buffer(data, mime=True) in self.allowed_extensions:
+        #    return False
+        #return True
+        return magic.from_buffer(data, mime=True).startswith('text/')
 
 
     def to_json(self):
