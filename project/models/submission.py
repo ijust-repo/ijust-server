@@ -43,6 +43,17 @@ class Submission(db.Document):
     status = IntEnumField(enum=SubmissionStatusType, required=True, default=SubmissionStatusType.Pending)
     reason = db.StringField()
 
+    meta = {
+        'collection': 'submissions',
+        'indexes': [
+            '-submitted_at',
+            'contest',
+            ('contest', 'team'),
+            ('contest', 'problem'),
+            ('contest', 'problem', 'team')
+        ]
+    }
+
 
     @property
     def code_addr(self):

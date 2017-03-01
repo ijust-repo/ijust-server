@@ -13,6 +13,14 @@ class User(db.Document):
     email = db.StringField(required=True, unique=True)
     password = db.StringField(required=True)
 
+    meta = {
+        'collection': 'users',
+        'indexes': [
+            'username',
+            'email'
+        ]
+    }
+
 
     def hash_password(self, password):
         password = password.encode('utf-8')

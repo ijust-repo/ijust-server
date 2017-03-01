@@ -16,6 +16,11 @@ class Problem(db.Document):
     time_limit = db.FloatField(required=True)
     space_limit = db.IntField(required=True)
 
+    meta = {
+        'collection': 'problems'
+    }
+
+
     @property
     def body_addr(self):
         return os.path.join(app.config['PROBLEM_DIR'], str(self.pk))
@@ -73,6 +78,10 @@ class Result(db.Document):
         penalty = 0,
         solved = False
     )
+
+    meta = {
+        'collection': 'results'
+    }
 
 
     @staticmethod
@@ -168,6 +177,17 @@ class Contest(db.Document):
     accepted_teams = db.ListField(db.ReferenceField('Team', reverse_delete_rule=db.PULL))
     problems = db.ListField(db.ReferenceField('Problem', reverse_delete_rule=db.PULL))
     result = db.ReferenceField('Result')
+
+    meta = {
+        'collection': 'contests',
+        'indexes': [
+            '-starts_at',
+            'owner',
+            'admins',
+            'accepted_teams',
+            'problems'
+        ]
+    }
 
 
     def create_result(self):

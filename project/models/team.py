@@ -11,6 +11,15 @@ class Team(db.Document):
     owner = db.ReferenceField('User', required=True)
     members = db.ListField(db.ReferenceField('User'))
 
+    meta = {
+        'collection': 'teams',
+        'indexes': [
+            'name',
+            'owner',
+            'members'
+        ]
+    }
+
 
     @classmethod
     def teams(cls, user_obj):
