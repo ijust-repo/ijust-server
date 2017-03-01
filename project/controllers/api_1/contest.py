@@ -14,7 +14,7 @@ from project import app
 from project.extensions import db, auth
 from project.modules.datetime import utcnowts
 from project.modules.paginator import paginate
-from project.models.contest import Contest, Problem, ContestDateTimeException
+from project.models.contest import Contest, Problem, ContestDateTimeError
 from project.models.team import Team
 from project.models.user import User
 from project.forms.problem import UploadProblemBody, UploadTestCase
@@ -82,7 +82,7 @@ def create():
 
     except db.NotUniqueError:
         return abort(409, "Contest already exists")
-    except ContestDateTimeException:
+    except ContestDateTimeError:
         return abort(406, "EndTime must be greater than StartTime and StartTime must be greater than CreationTime")
 
 
@@ -227,7 +227,7 @@ def edit(cid):
         return abort(409, "Contest name already exists")
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest does not exist")
-    except ContestDateTimeException:
+    except ContestDateTimeError:
         return abort(406, "EndTime must be greater than StartTime and StartTime must be greater than CreationTime")
 
 

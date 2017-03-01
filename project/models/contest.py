@@ -205,7 +205,7 @@ class Contest(db.Document):
 
     def save(self):
         if not (self.created_at < self.starts_at < self.ends_at):
-            raise ContestDateTimeException()
+            raise ContestDateTimeError()
         super(Contest, self).save()
 
 
@@ -261,5 +261,5 @@ class Contest(db.Document):
 
 
 
-class ContestDateTimeException(db.ValidationError):
+class ContestDateTimeError(db.ValidationError):
     pass
