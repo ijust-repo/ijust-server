@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 __author__ = 'AminHP'
 
+# python imports
 from good import Schema, All, Any, Required, Optional, Length, Range, Match, Default
+
+# project imports
+from project.modules.recaptcha_validator import ReCaptcha
 
 
 create_schema = Schema({
     Required('name'): All(unicode, Length(max=32)),
     Required('starts_at'): int,
-    Required('ends_at'): int
+    Required('ends_at'): int,
+    Required('recaptcha'): ReCaptcha()
 })
 
 

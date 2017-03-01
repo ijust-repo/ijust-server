@@ -18,6 +18,7 @@ from project.models.contest import Contest
 def create():
     """
     Create Team
+    Maximum number of teams can be created is 5
     ---
     tags:
       - team

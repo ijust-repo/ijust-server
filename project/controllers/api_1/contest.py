@@ -51,6 +51,8 @@ def create():
             ends_at:
               type: integer
               description: Contest ends_at (utc timestamp)
+            recaptcha:
+              type: string
       - name: Access-Token
         in: header
         type: string
@@ -826,6 +828,7 @@ def team_reject(cid, tid):
 def problem_create(cid):
     """
     Problem Create
+    Maximum number of problems can be created is 20
     ---
     tags:
       - contest
@@ -878,6 +881,8 @@ def problem_create(cid):
         description: You aren't owner or admin of the contest
       404:
         description: Contest does not exist
+      406:
+        description: You can't create more problems
     """
 
     json = request.json
@@ -887,6 +892,9 @@ def problem_create(cid):
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
+
+        if len(obj.problems) >= 20:
+            return abort(406, "You can't create more problems")
 
         problem_obj = Problem()
         problem_obj.populate(json)
