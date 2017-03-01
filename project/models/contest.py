@@ -179,17 +179,17 @@ class Contest(db.Document):
 
     def is_user_in_contest(self, user_obj):
         for team in self.accepted_teams:
-            if team.owner == user_obj or user_obj in team.members:
+            if team.is_user_in_team(user_obj):
                 return True
         return False
 
 
     def user_joining_status(self, user_obj):
         for team in self.accepted_teams:
-            if team.owner == user_obj or user_obj in team.members:
+            if team.is_user_in_team(user_obj):
                 return 2, team
         for team in self.pending_teams:
-            if team.owner == user_obj or user_obj in team.members:
+            if team.is_user_in_team(user_obj):
                 return 1, team
         return 0, None
 

@@ -21,6 +21,10 @@ class Team(db.Document):
         return dict(owner_teams=owner_teams, member_teams=member_teams)
 
 
+    def is_user_in_team(self, user_obj):
+        return user_obj == self.owner or user_obj in self.members
+
+
     def populate(self, json):
         if 'name' in json:
             self.name = json['name']

@@ -93,7 +93,7 @@ def create():
         contest_obj = Contest.objects().get(pk=json['contest_id'], accepted_teams=team_obj, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
-        if user_obj != team_obj.owner and not user_obj in team_obj.members:
+        if not team_obj.is_user_in_team(user_obj):
             return abort(403, "You aren't owner or member of the team")
 
         now = utcnowts()
@@ -192,7 +192,7 @@ def list(tid, cid):
         contest_obj = Contest.objects().get(pk=cid, accepted_teams=team_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
-        if user_obj != team_obj.owner and not user_obj in team_obj.members:
+        if not team_obj.is_user_in_team(user_obj):
             return abort(403, "You aren't owner or member of the team")
 
         submissions = Submission.objects().filter(
@@ -256,7 +256,7 @@ def list_problem(tid, cid, pid):
         contest_obj = Contest.objects().get(pk=cid, accepted_teams=team_obj, problems=problem_obj)
         user_obj = User.objects().get(pk=g.user_id)
 
-        if user_obj != team_obj.owner and not user_obj in team_obj.members:
+        if not team_obj.is_user_in_team(user_obj):
             return abort(403, "You aren't owner or member of the team")
 
         submissions = Submission.objects().filter(
@@ -305,7 +305,7 @@ def download_code(sid):
         obj = Submission.objects().get(pk=sid)
         user_obj = User.objects().get(pk=g.user_id)
 
-        if user_obj != obj.team.owner and not user_obj in obj.team.members:
+        if not obj.team.is_user_in_team(user_obj):
             return abort(403, "You aren't owner or member of the team")
 
         return send_file(obj.code_addr)
