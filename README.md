@@ -4,6 +4,7 @@
 ### Installation:
 
 ```
+$ sudo apt-get install mongodb-server redis-server openssl libssl-dev curl libcurl4-nss-dev python-pip
 $ sudo pip install virtualenv
 $ sudo apt-get install docker (for deploying)
 ```
