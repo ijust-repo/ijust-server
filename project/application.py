@@ -21,10 +21,12 @@ def create_app(config_obj=DefaultConfig, config_file=None):
 
 
 def install_app(app):
+    import flask
     import project
     import controllers
 
     project.app = app
+    flask.current_app = app
     for module in controllers.__all__:
         __import__('project.controllers.%s' % module)
 

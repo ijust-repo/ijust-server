@@ -65,6 +65,7 @@ def celery():
     """
     Run celery worker.
     """
+    app = create_app()
     from mongoengine.connection import disconnect
     from project.extensions import celery
     from celery.bin import worker
