@@ -5,15 +5,14 @@ __author__ = 'AminHP'
 import os
 
 # flask imports
+from flask import Flask
 from flask.ext.script import Manager
 
 # project imports
-from project import app
 from project.application import create_app
 from project.config import DevelopmentConfig, DeploymentConfig, TestingConfig
 
-
-manager = Manager(app)
+manager = Manager(Flask('manager'))
 
 
 @manager.command
@@ -21,6 +20,7 @@ def run():
     """
     Run server on port 8080 with default config.
     """
+    app = create_app()
     app.run(host='0.0.0.0', port=8080)
 
 
