@@ -20,8 +20,8 @@ class DefaultConfig(object):
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     SCHEMA_DIR = os.path.join(BASE_DIR, 'schemas')
-    TEMP_DIR = os.path.join(BASE_DIR, 'tmp')
-    MEDIA_DIR = os.path.join(TEMP_DIR, 'Media')
+    TEMP_DIR = os.path.join(BASE_DIR, 'Temp')
+    MEDIA_DIR = os.path.join(BASE_DIR, 'Media')
     PROBLEM_DIR = os.path.join(MEDIA_DIR, 'Problems')
     TESTCASE_DIR = os.path.join(MEDIA_DIR, 'Testcases')
     SUBMISSION_DIR = os.path.join(MEDIA_DIR, 'Submissions')

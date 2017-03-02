@@ -9,7 +9,7 @@ from flask.ext.script import Manager
 
 # project imports
 from project import app
-from project.application import configure_app
+from project.application import create_app
 from project.config import DevelopmentConfig, DeploymentConfig, TestingConfig
 
 
@@ -29,7 +29,7 @@ def develop():
     """
     Run server on port 8080 with development config.
     """
-    configure_app(app, DevelopmentConfig)
+    app = create_app(DevelopmentConfig)
     app.run(host='0.0.0.0', port=8080)
 
 
@@ -38,7 +38,7 @@ def deploy():
     """
     Run server on port 8080 with deployment config.
     """
-    configure_app(app, DeploymentConfig)
+    app = create_app(DeploymentConfig)
     app.run(host='0.0.0.0', port=8080)
 
 
@@ -47,7 +47,7 @@ def testing():
     """
     Run server on port 8080 with testing config.
     """
-    configure_app(app, TestingConfig)
+    app = create_app(TestingConfig)
     app.run(host='0.0.0.0', port=8080)
 
 
@@ -56,7 +56,7 @@ def custom_config(config_file):
     """
     Run server on port 8080 with custom config file.
     """
-    configure_app(app, os.path.abspath(config_file), is_pyfile=True)
+    app = create_app(config_file=os.path.abspath(config_file))
     app.run(host='0.0.0.0', port=8080)
 
 

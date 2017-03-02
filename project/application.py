@@ -11,19 +11,29 @@ from flask import Flask, jsonify
 from config import DefaultConfig
 
 
-def create_app():
+def create_app(config_obj=DefaultConfig, config_file=None):
     app = Flask(__name__)
-    configure_app(app, DefaultConfig)
+    configure_app(app, config_obj, config_file)
     configure_extensions(app)
     configure_errorhandlers(app)
+    install_app(app)
     return app
 
 
-def configure_app(app, config, is_pyfile=False):
-    if is_pyfile:
-        app.config.from_pyfile(config)
-    else:
-        app.config.from_object(config)
+def install_app(app):
+    import project
+    import controllers
+
+    project.app = app
+    for module in controllers.__all__:
+        __import__('project.controllers.%s' % module)
+
+
+def configure_app(app, config_obj, config_file):
+    if config_obj:
+        app.config.from_object(config_obj)
+    if config_file:
+        app.config.from_pyfile(config_file)
 
     [os.makedirs(v) for k, v in app.config.items() if k.endswith('DIR') and not os.path.exists(v)]
 

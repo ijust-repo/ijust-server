@@ -3,13 +3,15 @@
 # find . -name \*.pyc -delete
 __author__ = 'AminHP'
 
+# python imports
+import os
+
 # project imports
-from project import app
-from project.application import configure_app
+from project.application import create_app
 from project.config import DeploymentConfig
 
-
-configure_app(app, DeploymentConfig)
+config_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "project/conf.py")
+app = create_app(DeploymentConfig, "conf.py")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
