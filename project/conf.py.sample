@@ -21,14 +21,14 @@ SUBMISSION_DIR = os.path.join(MEDIA_DIR, 'Submissions')
 
 # database
 
-REDIS_URL = "redis://masterhost:6379/0"
+REDIS_URL = "redis://Redis:6379/0"
 
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
 
 MONGODB_SETTINGS = {
     'db': 'ijust',
-    'host': 'masterhost',
+    'host': 'Mongo',
     'port': 27017
 }
 

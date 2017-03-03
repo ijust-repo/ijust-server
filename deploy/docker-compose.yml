@@ -1,0 +1,16 @@
+Mongo:
+  image: mongo
+  volumes:
+    - /srv/docker/mongo/datadir:/data/mongodb
+
+Redis:
+  image: redis
+
+IJust:
+  image: ijust
+  links:
+    - Mongo
+    - Redis
+  volumes:
+    - /var/www/ijust:/var/www/ijust
+    - /tmp:/tmp
