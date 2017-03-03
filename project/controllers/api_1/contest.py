@@ -169,7 +169,8 @@ def info(cid):
 
     try:
         obj = Contest.objects.get(pk=cid)
-        return jsonify(obj.to_json_user()), 200
+        user_obj = User.objects.get(pk=g.user_id)
+        return jsonify(obj.to_json_user(user_obj)), 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest does not exist")
 
