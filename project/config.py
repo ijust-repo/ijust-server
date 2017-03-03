@@ -18,10 +18,12 @@ class DefaultConfig(object):
 
     # directory
 
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__)) # don't touch this !!!
+
     SCHEMA_DIR = os.path.join(BASE_DIR, 'schemas')
-    TEMP_DIR = os.path.join(BASE_DIR, 'Temp')
-    MEDIA_DIR = os.path.join(BASE_DIR, 'Media')
+    DATA_DIR = os.path.join(BASE_DIR, '..', '..', 'Data')
+    TEMP_DIR = os.path.join(DATA_DIR, 'Temp')
+    MEDIA_DIR = os.path.join(DATA_DIR, 'Media')
     PROBLEM_DIR = os.path.join(MEDIA_DIR, 'Problems')
     TESTCASE_DIR = os.path.join(MEDIA_DIR, 'Testcases')
     SUBMISSION_DIR = os.path.join(MEDIA_DIR, 'Submissions')
@@ -60,7 +62,7 @@ class DefaultConfig(object):
 
     MONGODB_SETTINGS = {
         'db': 'ijust',
-        'host': '127.0.0.1',
+        'host': 'localhost',
         'port': 27017
     }
 
@@ -90,6 +92,7 @@ class DeploymentConfig(DefaultConfig):
 
     DEBUG = False
     DEPLOYMENT = True
+    TOKEN_EXPIRE_TIME = 10 * 24 * 3600
 
     # cache
 

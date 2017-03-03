@@ -1,15 +1,37 @@
-FROM tiangolo/uwsgi-nginx:python2.7
+FROM ubuntu:16.04
 
-MAINTAINER Flask-MVC <mdan.hagh@gmail.com>
+MAINTAINER AminHP
 
-# Add app configuration to Nginx
-RUN openssl req -x509 -newkey rsa:2048 -keyout /etc/ssl/mycert.key -out /etc/ssl/mycert.crt -days XXX -nodes -subj "/C=US/ST=New York/L=Brooklyn/O=Example Brooklyn Company/CN=examplebrooklyn.com"
+RUN apt-get update
+RUN apt-get install -y \
+	build-essential openssl libssl-dev \
+	python python-pip python-dev \
+	libcurl4-nss-dev \
+	supervisor
 
-# Copy app
-COPY . /app
-COPY deploy /app
-COPY deploy/nginx.conf /etc/nginx/conf.d/
+RUN useradd cel
 
-# Install requirements
-WORKDIR /app
-RUN pip install -r requirements
+RUN pip install --upgrade pip
+RUN pip install uwsgi
+RUN pip install virtualenv
+
+ENV HOSTPATH /var/www/ijust
+ENV DIRPATH /ijust
+
+RUN mkdir -p $HOSTPATH
+RUN mkdir -p $DIRPATH
+COPY ./deploy/supervisor.conf /etc/supervisor/conf.d/
+COPY ./deploy/uwsgi.ini $DIRPATH/uwsgi.ini
+COPY ./deploy/start.sh $DIRPATH/start.sh
+COPY ./requirements $DIRPATH/requirements
+
+WORKDIR $DIRPATH
+RUN virtualenv venv
+RUN venv/bin/pip install -r requirements
+
+RUN update-rc.d supervisor defaults
+RUN update-rc.d supervisor enable
+
+EXPOSE 6379 27017
+
+CMD ["/bin/bash", "start.sh"]
