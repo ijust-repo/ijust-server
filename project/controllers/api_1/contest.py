@@ -62,7 +62,7 @@ def create():
       201:
         description: Successfully created
         schema:
-          $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
+          $ref: "#/definitions/api_1_contest_list_owner_get_ContestInfo"
       400:
         description: Bad request
       401:
@@ -111,7 +111,7 @@ def info(cid):
       200:
         description: Contest information
         schema:
-          id: ContestInfo
+          id: ContestInfoUser
           type: object
           properties:
             id:
@@ -144,6 +144,23 @@ def info(cid):
             is_active:
               type: boolean
               description: Contest is_active
+            is_owner:
+              type: boolean
+              description: Contest is_owner
+            is_admin:
+              type: boolean
+              description: Contest is_admin
+            joining_status:
+              type: object
+              description: Contest user joining status
+              schema:
+                properties:
+                  status:
+                    type: integer
+                    description: joining status (0=not_joined, 1=waiting, 2=joined)
+                  team:
+                    schema:
+                      $ref: "#/definitions/api_1_contest_team_list_get_TeamAbsInfo"
       401:
         description: Token is invalid or has expired
       404:
@@ -152,7 +169,7 @@ def info(cid):
 
     try:
         obj = Contest.objects.get(pk=cid)
-        return jsonify(obj.to_json()), 200
+        return jsonify(obj.to_json_user()), 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest does not exist")
 
@@ -198,7 +215,7 @@ def edit(cid):
       200:
         description: Successfully edited
         schema:
-          $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
+          $ref: "#/definitions/api_1_contest_list_owner_get_ContestInfo"
       400:
         description: Bad request
       401:
@@ -268,57 +285,7 @@ def list():
             contests:
               type: array
               items:
-                schema:
-                  id: ContestInfoUser
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      description: Contest id
-                    name:
-                      type: string
-                      description: Contest name
-                    owner:
-                      description: Owner info
-                      schema:
-                          id: ContestOwnerInfo
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                              description: Owner id
-                            username:
-                              type: string
-                              description: Owner username
-                    created_at:
-                      type: integer
-                      description: Contest created_at (utc timestamp)
-                    starts_at:
-                      type: integer
-                      description: Contest starts_at (utc timestamp)
-                    ends_at:
-                      type: integer
-                      description: Contest ends_at (utc timestamp)
-                    is_active:
-                      type: boolean
-                      description: Contest is_active
-                    is_owner:
-                      type: boolean
-                      description: Contest is_owner
-                    is_admin:
-                      type: boolean
-                      description: Contest is_admin
-                    joining_status:
-                      type: object
-                      description: Contest user joining status
-                      schema:
-                        properties:
-                          status:
-                            type: integer
-                            description: joining status (0=not_joined, 1=waiting, 2=joined)
-                          team:
-                            schema:
-                              $ref: "#/definitions/api_1_contest_team_list_get_TeamAbsInfo"
+                $ref: "#/definitions/api_1_contest_info_get_ContestInfoUser"
             meta:
               type: object
               description: Pagination meta data
@@ -393,7 +360,39 @@ def list_owner():
               type: array
               items:
                 schema:
-                  $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
+                  id: ContestInfo
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Contest id
+                    name:
+                      type: string
+                      description: Contest name
+                    owner:
+                      description: Owner info
+                      schema:
+                          id: ContestOwnerInfo
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Owner id
+                            username:
+                              type: string
+                              description: Owner username
+                    created_at:
+                      type: integer
+                      description: Contest created_at (utc timestamp)
+                    starts_at:
+                      type: integer
+                      description: Contest starts_at (utc timestamp)
+                    ends_at:
+                      type: integer
+                      description: Contest ends_at (utc timestamp)
+                    is_active:
+                      type: boolean
+                      description: Contest is_active
       401:
         description: Token is invalid or has expired
     """
@@ -530,12 +529,12 @@ def list_team(tid):
               type: array
               items:
                 schema:
-                  $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
+                  $ref: "#/definitions/api_1_contest_list_owner_get_ContestInfo"
             joined_contests:
               type: array
               items:
                 schema:
-                  $ref: "#/definitions/api_1_contest_info_get_ContestInfo"
+                  $ref: "#/definitions/api_1_contest_list_owner_get_ContestInfo"
       401:
         description: Token is invalid or has expired
       404:
