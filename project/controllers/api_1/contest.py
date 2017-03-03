@@ -160,7 +160,18 @@ def info(cid):
                     description: joining status (0=not_joined, 1=waiting, 2=joined)
                   team:
                     schema:
-                      $ref: "#/definitions/api_1_contest_team_list_get_TeamAbsInfo"
+                      id: TeamAbsInfo
+                      properties:
+                        id:
+                          type: string
+                          description: Team id
+                        name:
+                          type: string
+                          description: Team name
+                        owner:
+                          description: Owner info
+                          schema:
+                            $ref: "#/definitions/api_1_team_info_get_UserAbsInfo"
       401:
         description: Token is invalid or has expired
       404:
@@ -665,11 +676,11 @@ def team_unjoin(cid, tid):
         return abort(404, "Contest or Team does not exist")
 
 
-@app.api_route('<string:cid>/team', methods=['GET'])
+@app.api_route('<string:cid>/pending_teams', methods=['GET'])
 @auth.authenticate
-def team_list(cid):
+def team_list_pending(cid):
     """
-    Team Get List
+    Team Get Pending List
     ---
     tags:
       - contest
@@ -686,17 +697,12 @@ def team_list(cid):
         description: Token of current user
     responses:
       200:
-        description: List of teams
+        description: List of pending teams
         schema:
           id: ContestTeamsList
           type: object
           properties:
-            pending_teams:
-              type: array
-              items:
-                schema:
-                  $ref: "#/definitions/api_1_team_info_get_TeamInfo"
-            accepted_teams:
+            teams:
               type: array
               items:
                 schema:
@@ -716,7 +722,51 @@ def team_list(cid):
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
 
-        return jsonify(obj.to_json_teams()), 200
+        return jsonify(obj.to_json_teams('pending')), 200
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "Contest does not exist")
+
+
+@app.api_route('<string:cid>/accepted_teams', methods=['GET'])
+@auth.authenticate
+def team_list_accepted(cid):
+    """
+    Team Get Accepted List
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: List of accepted teams
+        schema:
+          $ref: "#/definitions/api_1_contest_team_list_pending_get_ContestTeamsList"
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner or admin of the contest
+      404:
+        description: Contest does not exist
+    """
+
+    try:
+        obj = Contest.objects.get(pk=cid)
+        user_obj = User.objects.get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
+
+        return jsonify(obj.to_json_teams('accepted')), 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest does not exist")
 

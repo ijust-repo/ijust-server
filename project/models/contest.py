@@ -261,11 +261,20 @@ class Contest(db.Document):
         )
 
 
-    def to_json_teams(self):
-        return dict(
-            pending_teams = [team.to_json() for team in self.pending_teams],
-            accepted_teams = [team.to_json() for team in self.accepted_teams]
-        )
+    def to_json_teams(self, category):
+        if category == 'pending':
+            return dict(
+                pending_teams = [team.to_json() for team in self.pending_teams]
+            )
+        elif category == 'accepted':
+            return dict(
+                accepted_teams = [team.to_json() for team in self.accepted_teams]
+            )
+        else:
+            return dict(
+                pending_teams = [team.to_json() for team in self.pending_teams],
+                accepted_teams = [team.to_json() for team in self.accepted_teams]
+            )
 
 
     def to_json_problems(self):
