@@ -150,6 +150,9 @@ def info(cid):
             is_admin:
               type: boolean
               description: Contest is_admin
+            teams_num:
+              type: integer
+              description: Contest number of accepted teams
             joining_status:
               type: object
               description: Contest user joining status
@@ -405,6 +408,9 @@ def list_owner():
                     is_active:
                       type: boolean
                       description: Contest is_active
+                    teams_num:
+                      type: integer
+                      description: Contest number of accepted teams
       401:
         description: Token is invalid or has expired
     """

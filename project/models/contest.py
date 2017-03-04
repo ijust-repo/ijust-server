@@ -239,7 +239,8 @@ class Contest(db.Document):
             created_at = self.created_at,
             starts_at = self.starts_at,
             ends_at = self.ends_at,
-            is_active = True if self.starts_at <= utcnowts() <= self.ends_at else False
+            is_active = True if self.starts_at <= utcnowts() <= self.ends_at else False,
+            teams_num = len(self.accepted_teams)
         )
 
 
