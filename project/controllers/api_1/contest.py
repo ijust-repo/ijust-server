@@ -265,6 +265,54 @@ def edit(cid):
         return abort(406, "EndTime must be greater than StartTime and StartTime must be greater than CreationTime")
 
 
+@app.api_route('<string:cid>/', methods=['DELETE'])
+@auth.authenticate
+def delete(cid):
+    """
+    Contest Delete
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successfully deleted
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the contest
+      404:
+        description: Contest does not exist
+      406:
+        description: Contest has been started
+    """
+
+    try:
+        obj = Contest.objects.get(pk=cid)
+        user_obj = User.objects.get(pk=g.user_id)
+
+        if user_obj != obj.owner:
+            return abort(403, "You aren't owner of the contest")
+
+        if utcnowts() >= obj.starts_at:
+            return abort(406, "Contest has been started")
+
+        obj.delete()
+        return '', 200
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "Contest does not exist")
+
+
 @app.api_route('', methods=['GET'])
 @paginate('contests', 20)
 @auth.authenticate
@@ -1271,7 +1319,7 @@ def problem_delete(cid, pid):
         description: Token of current user
     responses:
       200:
-        description: List of problems
+        description: Successfully deleted
         schema:
           $ref: "#/definitions/api_1_contest_problem_list_get_ContestProblemsList"
       401:
