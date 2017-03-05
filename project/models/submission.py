@@ -56,7 +56,7 @@ class Submission(db.Document):
 
 
     @property
-    def code_addr(self):
+    def code_path(self):
         return os.path.join(
             app.config['SUBMISSION_DIR'],
             str(self.contest.pk),

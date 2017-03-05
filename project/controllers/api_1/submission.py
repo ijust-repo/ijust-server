@@ -11,6 +11,7 @@ from flask import jsonify, request, g, send_file, abort
 from project import app
 from project.extensions import db, auth
 from project.modules.datetime import utcnowts
+from project.modules import ijudge
 from project.models.submission import Submission
 from project.models.contest import Problem, Contest
 from project.models.team import Team
@@ -109,10 +110,10 @@ def create():
         obj.save()
 
         file_obj = code
-        directory = os.path.dirname(obj.code_addr)
+        directory = os.path.dirname(obj.code_path)
         if not os.path.exists(directory):
             os.makedirs(directory)
-        file_obj.save(obj.code_addr)
+        file_obj.save(obj.code_path)
 
         check_code.delay(str(obj.pk))
 
@@ -308,7 +309,7 @@ def download_code(sid):
         if not obj.team.is_user_in_team(user_obj):
             return abort(403, "You aren't owner or member of the team")
 
-        return send_file(obj.code_addr)
+        return send_file(obj.code_path)
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Submission does not exist")
 
@@ -317,4 +318,7 @@ def download_code(sid):
 @celery.task()
 def check_code(sid):
     obj = Submission.objects.get(pk=sid)
-    # check submitted code here
+    status, reason = ijudge.judge(obj.code_path, obj.prog_lang, obj.problem.testcase_dir)
+    obj.status = status
+    obj.reason = reason
+    obj.save()
