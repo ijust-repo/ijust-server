@@ -1,6 +1,6 @@
 Mongo:
   image: mongo
-  container_name: mongo
+  container_name: mongoc
   volumes:
     - /srv/docker/mongo/datadir:/data/mongodb
 
