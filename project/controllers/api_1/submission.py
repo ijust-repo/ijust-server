@@ -318,7 +318,14 @@ def download_code(sid):
 @celery.task()
 def check_code(sid):
     obj = Submission.objects.get(pk=sid)
-    status, reason = ijudge.judge(obj.code_path, obj.prog_lang, obj.problem.testcase_dir)
+    status, reason = ijudge.judge(
+        obj.code_path,
+        obj.prog_lang,
+        obj.problem.testcase_dir,
+        obj.problem.time_limit,
+        obj.problem.space_limit
+    )
     obj.status = status
     obj.reason = reason
     obj.save()
+    #update_result()

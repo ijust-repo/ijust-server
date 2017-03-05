@@ -10,24 +10,7 @@ from project import app
 from project.extensions import db
 from project.modules.datetime import utcnowts
 from project.modules.fields import IntEnumField
-
-
-class SubmissionStatusType(Enum):
-    Pending = 0
-    CompileError = 1
-    RestrictedFunction = 2
-    TimeExceeded = 3
-    SpaceExceeded = 4
-    RuntimeError = 5
-    WrongAnswer = 6
-    ExtensionError = 7
-    Accepted = 8
-
-
-class ProgrammingLanguageType(Enum):
-    Cpp = 0
-    Python = 1
-    Java = 2
+from project.modules.ijudge.types import JudgementStatusType, ProgrammingLanguageType
 
 
 class Submission(db.Document):
@@ -40,7 +23,7 @@ class Submission(db.Document):
     team = db.ReferenceField('Team', required=True)
     user = db.ReferenceField('User', required=True)
 
-    status = IntEnumField(enum=SubmissionStatusType, required=True, default=SubmissionStatusType.Pending)
+    status = IntEnumField(enum=JudgementStatusType, required=True, default=JudgementStatusType.Pending)
     reason = db.StringField()
 
     meta = {
