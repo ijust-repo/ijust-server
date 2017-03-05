@@ -24,7 +24,7 @@ class Problem(db.Document):
 
 
     @property
-    def body_addr(self):
+    def body_path(self):
         return os.path.join(app.config['PROBLEM_DIR'], str(self.pk))
 
     @property
@@ -32,8 +32,8 @@ class Problem(db.Document):
         return os.path.join(app.config['TESTCASE_DIR'], str(self.pk))
 
     def delete(self):
-        if os.path.exists(self.body_addr):
-            os.remove(self.body_addr)
+        if os.path.exists(self.body_path):
+            os.remove(self.body_path)
         if os.path.exists(self.testcase_dir):
             shutil.rmtree(self.testcase_dir)
         super(Problem, self).delete()

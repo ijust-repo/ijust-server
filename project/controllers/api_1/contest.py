@@ -1412,7 +1412,7 @@ def problem_upload_body(cid, pid):
             return abort(415, "Supported file type is only application/pdf")
 
         file_obj = form.body.data
-        file_obj.save(problem_obj.body_addr)
+        file_obj.save(problem_obj.body_path)
 
         return "", 200
     except (db.DoesNotExist, db.ValidationError):
@@ -1538,7 +1538,7 @@ def problem_download_body(cid, pid):
                (now > obj.ends_at)):
             return abort(403, "You aren't allowed to see problem body")
 
-        return send_file(problem_obj.body_addr)
+        return send_file(problem_obj.body_path)
     except IOError:
         return abort(404, "File does not exist")
     except (db.DoesNotExist, db.ValidationError):
