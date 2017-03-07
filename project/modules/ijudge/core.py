@@ -12,16 +12,17 @@ SCRIPTS_DIR = os.path.join(BASE_DIR, 'scripts')
 def run(code_path, prog_lang, testcase_dir, time_limit, space_limit):
     prog_lang = prog_lang.lower()
     pl_script_dir = os.path.join(SCRIPTS_DIR, prog_lang)
+    input_dir = "%s/" % os.path.join(testcase_dir, 'inputs')
     log_dir = "%s.log" % code_path
-    config_mod = __import__("scripts.%s.config" % prog_lang)
 
+    config_mod = __import__("scripts.%s.config" % prog_lang)
     time_limit = float(time_limit * config_mod.TIME_LIMIT_FACTOR)
     space_limit = "%sMB" % (space_limit + 0) # TODO(AminHP): We must calculate os space usage
 
-    run_in_container(code_path, pl_script_dir, testcase_dir, log_dir, time_limit, space_limit)
+    run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, space_limit)
 
 
-def run_in_container(code_path, pl_script_dir, testcase_dir, log_dir, time_limit, space_limit):
+def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, space_limit):
     code_filename = os.path.basename(code_path)
 
     volumes = {
@@ -33,7 +34,7 @@ def run_in_container(code_path, pl_script_dir, testcase_dir, log_dir, time_limit
             'bind': "/etc/data/plscript",
             'mode': 'ro'
         },
-        testcase_dir: {
+        input_dir: {
             'bind': "/etc/data/inputs",
             'mode': 'ro'
         },
@@ -46,7 +47,7 @@ def run_in_container(code_path, pl_script_dir, testcase_dir, log_dir, time_limit
     env = {
         "CODE_PATH": volumes[code_path]["bind"],
         "PL_SCRIPT_DIR": volumes[pl_script_dir]["bind"],
-        "TESTCASE_DIR": volumes[testcase_dir]["bind"] + '/',
+        "TESTCASE_DIR": volumes[input_dir]["bind"] + '/',
         "LOG_DIR": volumes[log_dir]["bind"],
         "TIME_LIMIT": time_limit
     }
