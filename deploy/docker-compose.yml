@@ -9,7 +9,6 @@ Redis:
   container_name: redisc
 
 IJust:
-  build: ..
   image: ijust
   container_name: ijustc
   links:
@@ -20,6 +19,5 @@ IJust:
     - /tmp:/tmp
 
 IJudge:
-  build: ../project/modules/IJudge
   image: ijudge
   container_name: ijudgec

@@ -20,11 +20,6 @@ if [ -z "$TESTCASE_DIR" ]; then
 	exit 1
 fi
 
-if [ -z "$PROG_LANG" ]; then
-	echo "please export PROG_LANG"
-	exit 1
-fi
-
 if [ -z "$LOG_DIR" ]; then
 	export LOG_DIR="/tmp/outputs"
 fi
@@ -41,6 +36,9 @@ echo "begin compiling"
 
 
 if [ -s "$CODE_PATH" ]; then
+	chmod +x "$PL_SCRIPT_DIR/compile.sh"
+	chmod +x "$PL_SCRIPT_DIR/run.sh"
+
 	"$PL_SCRIPT_DIR/compile.sh" 2> "$LOG_DIR/compile.err"
 
 	echo "compiled successfully"
