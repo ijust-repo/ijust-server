@@ -3,6 +3,7 @@ __author__ = ['SALAR', 'AminHP']
 
 import docker
 import os
+import imp
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -15,7 +16,9 @@ def run(code_path, prog_lang, testcase_dir, time_limit, space_limit):
     input_dir = "%s/" % os.path.join(testcase_dir, 'inputs')
     log_dir = "%s.log" % code_path
 
-    config_mod = __import__("scripts.%s.config" % prog_lang)
+    config_file = os.path.join(pl_script_dir, 'config.py')
+    config_mod = imp.load_source('plconfig', config_file)
+
     time_limit = float(time_limit * config_mod.TIME_LIMIT_FACTOR)
     space_limit = "%sMB" % (space_limit + 0) # TODO(AminHP): We must calculate os space usage
 
