@@ -13,7 +13,7 @@ SCRIPTS_DIR = os.path.join(BASE_DIR, 'scripts')
 def run(code_path, prog_lang, testcase_dir, time_limit, space_limit):
     prog_lang = prog_lang.lower()
     pl_script_dir = os.path.join(SCRIPTS_DIR, prog_lang)
-    input_dir = "%s/" % os.path.join(testcase_dir, 'inputs')
+    input_dir = os.path.join(testcase_dir, 'inputs')
     log_dir = "%s.log" % code_path
 
     config_file = os.path.join(pl_script_dir, 'config.py')
@@ -35,7 +35,7 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
         },
         pl_script_dir: {
             'bind': "/etc/data/plscript",
-            'mode': 'ro'
+            'mode': 'rw'
         },
         input_dir: {
             'bind': "/etc/data/inputs",
