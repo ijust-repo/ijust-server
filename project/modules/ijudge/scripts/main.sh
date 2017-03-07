@@ -44,7 +44,7 @@ if [ -s "$CODE_PATH" ]; then
 	echo "compiled successfully"
 	echo "begin tests"
 	
-	for tc in "$search_dir"$TESTCASE_DIR*
+	for tc in "$TESTCASE_DIR"/*
 	do
 		if [ -s "$tc" ]; then
 			NAME="$(basename $tc | cut -d'.' -f 1)"

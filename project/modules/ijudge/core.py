@@ -50,7 +50,7 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
     env = {
         "CODE_PATH": volumes[code_path]["bind"],
         "PL_SCRIPT_DIR": volumes[pl_script_dir]["bind"],
-        "TESTCASE_DIR": volumes[input_dir]["bind"] + '/',
+        "TESTCASE_DIR": volumes[input_dir]["bind"],
         "LOG_DIR": volumes[log_dir]["bind"],
         "TIME_LIMIT": time_limit
     }
