@@ -91,6 +91,9 @@ def check_result(log_dir, output_dir, time_limit):
         if os.stat(code_error_fp).st_size != 0:
             return JudgementStatusType.RuntimeError, testcase
 
+        if not os.path.exists(code_stat_fp):
+            return JudgementStatusType.TimeExceeded, testcase
+
         with open(code_stat_fp) as stat_file:
             line = stat_file.readline()
             run_time = float(line)
