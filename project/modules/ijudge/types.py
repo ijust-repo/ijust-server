@@ -21,4 +21,4 @@ class ProgrammingLanguageType(Enum):
     Cpp11 = 1
     Python27 = 2
     Python35 = 3
-    Java = 4
+    Java8 = 4
