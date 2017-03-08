@@ -89,7 +89,7 @@ def check_result(log_dir, output_dir):
             return JudgementStatusType.RuntimeError
 
         with open(code_stat_fp) as stat_file:
-            line = stat_file.readline().replace('\n', '')
+            line = stat_file.readline()
             running_time = float(line)
             if running_time == -1:
                 return JudgementStatusType.TimeExceeded
