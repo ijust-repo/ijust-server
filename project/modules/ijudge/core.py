@@ -89,16 +89,16 @@ def check_result(log_dir, output_dir, time_limit):
         code_stat_fp = "%s.stt" % os.path.join(log_dir, testcase)
 
         if os.stat(code_error_fp).st_size != 0:
-            return JudgementStatusType.RuntimeError
+            return JudgementStatusType.RuntimeError, testcase
 
         with open(code_stat_fp) as stat_file:
             line = stat_file.readline()
             run_time = float(line)
             if run_time > time_limit:
-                return JudgementStatusType.TimeExceeded
+                return JudgementStatusType.TimeExceeded, testcase
 
         if not os.path.exists(code_output_fp):
-            return JudgementStatusType.RuntimeError
+            return JudgementStatusType.RuntimeError, testcase
 
         with open(code_output_fp) as output_file, \
              open(desired_output_fp) as desired_output_file:
@@ -110,6 +110,6 @@ def check_result(log_dir, output_dir, time_limit):
             desired_output = desired_output.strip()
 
             if output != desired_output:
-                return JudgementStatusType.WrongAnswer
+                return JudgementStatusType.WrongAnswer, testcase
 
     return JudgementStatusType.Accepted
