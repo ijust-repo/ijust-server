@@ -62,16 +62,19 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
     }
 
     client = docker.from_env()
-    client.containers.run(
-        image = "ijudge",
-        remove = True, 
-        stdout = True,
-        stderr = True,
-        mem_limit = space_limit,
-        mem_swappiness = 0,
-        volumes = volumes,
-        environment = env
-    )
+    try:
+        client.containers.run(
+            image = "ijudge",
+            remove = True, 
+            stdout = True,
+            stderr = True,
+            mem_limit = space_limit,
+            mem_swappiness = 0,
+            volumes = volumes,
+            environment = env
+        )
+    except docker.errors.ContainerError:
+        pass
 
 
 def check_result(log_dir, output_dir):
