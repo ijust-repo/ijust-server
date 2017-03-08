@@ -12,7 +12,7 @@ from project import app
 from project.extensions import db, auth
 from project.modules.datetime import utcnowts
 from project.modules import ijudge
-from project.models.submission import Submission
+from project.models.submission import Submission, JudgementStatusType
 from project.models.contest import Problem, Contest
 from project.models.team import Team
 from project.models.user import User
@@ -48,7 +48,7 @@ def create():
         in: formData
         type: integer
         required: true
-        description: Programming language type (0=Cpp, 1=Python, 2=Java)
+        description: Programming language type (0=Cpp, 1=Cpp11, 2=Python27, 3=Python35, 4=Java8)
       - name: code
         in: formData
         type: file
@@ -115,7 +115,7 @@ def create():
             os.makedirs(directory)
         file_obj.save(obj.code_path)
 
-        check_code.delay(str(obj.pk))
+        check_code_task.delay(str(obj.pk))
 
         return "", 201
     except (db.DoesNotExist, db.ValidationError):
@@ -316,8 +316,12 @@ def download_code(sid):
 
 
 @celery.task()
-def check_code(sid):
+def check_code_task(sid):
     obj = Submission.objects.get(pk=sid)
+    check_code(obj)
+
+
+def check_code(obj):
     status, reason = ijudge.judge(
         obj.code_path,
         obj.prog_lang,
@@ -328,4 +332,14 @@ def check_code(sid):
     obj.status = status
     obj.reason = reason
     obj.save()
-    #update_result()
+    update_contest_result(obj)
+
+
+def update_contest_result(obj):
+    result = obj.contest.result
+    tid = str(obj.team.pk)
+    pid = str(obj.problem.pk)
+    if obj.status == JudgementStatusType.Accepted:
+        result.update_succeed_try(tid, pid, obj.submitted_at, obj.contest.starts_at)
+    else:
+        result.update_failed_try(tid, pid, obj.submitted_at)
