@@ -45,7 +45,7 @@ if [ -s "$CODE_PATH" ]; then
 	for tc in "$TESTCASE_DIR"/*
 	do
 		if [ -s "$tc" ]; then
-			NAME="$(basename $tc | cut -d'.' -f 1)"
+			NAME="$(basename $tc)"
 			START=$(date +%s.%N)
 			timeout -k "$TIME_LIMIT"s "$TIME_LIMIT"s /bin/bash "$PL_SCRIPT_DIR/run.sh" < "$tc" 1> "$LOG_DIR/$NAME.out" 2> "$LOG_DIR/$NAME.err"
 			END=$(date +%s.%N)
