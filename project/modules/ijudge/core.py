@@ -28,7 +28,7 @@ def run(code_path, prog_lang, testcase_dir, time_limit, space_limit):
     space_limit = "%sMB" % (space_limit + 0) # TODO(AminHP): We must calculate os space usage
 
     run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, space_limit)
-    return check_result(log_dir, output_dir)
+    return check_result(log_dir, output_dir, time_limit)
 
 
 def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, space_limit):
@@ -77,7 +77,7 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
         pass
 
 
-def check_result(log_dir, output_dir):
+def check_result(log_dir, output_dir, time_limit):
     compile_error_fp = os.path.join(log_dir, "compile.err")
     if os.stat(compile_error_fp).st_size != 0:
         return JudgementStatusType.CompileError
@@ -94,7 +94,7 @@ def check_result(log_dir, output_dir):
         with open(code_stat_fp) as stat_file:
             line = stat_file.readline()
             running_time = float(line)
-            if running_time == -1:
+            if running_time > time_limit:
                 return JudgementStatusType.TimeExceeded
 
         if not os.path.exists(code_output_fp):
