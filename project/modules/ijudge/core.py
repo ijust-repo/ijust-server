@@ -109,7 +109,8 @@ def check_result(log_dir, output_dir, time_limit):
             output = output_file.read()
             desired_output = desired_output_file.read()
 
-            output = output[:-1] if output[-1] == '\n' else output
+            if len(output):
+                output = output[:-1] if output[-1] == '\n' else output
             desired_output = desired_output.strip()
 
             if output != desired_output:
