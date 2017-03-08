@@ -36,10 +36,8 @@ echo "begin compiling"
 
 
 if [ -s "$CODE_PATH" ]; then
-	chmod +x "$PL_SCRIPT_DIR/compile.sh"
-	chmod +x "$PL_SCRIPT_DIR/run.sh"
 
-	"$PL_SCRIPT_DIR/compile.sh" 2> "$LOG_DIR/compile.err"
+	/bin/bash "$PL_SCRIPT_DIR/compile.sh" 2> "$LOG_DIR/compile.err"
 
 	echo "compiled successfully"
 	echo "begin tests"
@@ -49,7 +47,7 @@ if [ -s "$CODE_PATH" ]; then
 		if [ -s "$tc" ]; then
 			NAME="$(basename $tc | cut -d'.' -f 1)"
 			START=$(date +%s.%N)
-			"$PL_SCRIPT_DIR/run.sh" < "$tc" 1> "$LOG_DIR/$NAME.out" 2> "$LOG_DIR/$NAME.err"
+			/bin/bash "$PL_SCRIPT_DIR/run.sh" < "$tc" 1> "$LOG_DIR/$NAME.out" 2> "$LOG_DIR/$NAME.err"
 			END=$(date +%s.%N)
 			DIFF=$(echo "$END - $START" | bc)
 			echo $DIFF > "$LOG_DIR/$NAME.stt"

@@ -41,7 +41,7 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
         },
         pl_script_dir: {
             'bind': "/etc/data/plscript",
-            'mode': 'rw'
+            'mode': 'ro'
         },
         input_dir: {
             'bind': "/etc/data/inputs",
