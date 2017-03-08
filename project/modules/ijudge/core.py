@@ -112,4 +112,4 @@ def check_result(log_dir, output_dir, time_limit):
             if output != desired_output:
                 return JudgementStatusType.WrongAnswer, testcase
 
-    return JudgementStatusType.Accepted
+    return JudgementStatusType.Accepted, ''
