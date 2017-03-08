@@ -7,7 +7,7 @@ RUN apt-get install -y \
 	build-essential openssl libssl-dev \
 	python python-pip python-dev \
 	libcurl4-nss-dev \
-	supervisor
+	supervisor docker.io
 
 RUN useradd cel
 
