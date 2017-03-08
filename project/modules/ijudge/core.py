@@ -93,8 +93,8 @@ def check_result(log_dir, output_dir, time_limit):
 
         with open(code_stat_fp) as stat_file:
             line = stat_file.readline()
-            running_time = float(line)
-            if running_time > time_limit:
+            run_time = float(line)
+            if run_time > time_limit:
                 return JudgementStatusType.TimeExceeded
 
         if not os.path.exists(code_output_fp):
