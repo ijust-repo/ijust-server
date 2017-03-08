@@ -34,7 +34,7 @@ class UploadCode(FlaskForm):
 
     def to_json(self):
         return dict(
-            filename = self.code.raw_data[0].filename,
+            filename = self.code.raw_data[0].filename.replace(' ', '_'),
             contest_id = self.contest_id.data,
             problem_id = self.problem_id.data,
             team_id = self.team_id.data,
