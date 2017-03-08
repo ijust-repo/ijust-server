@@ -80,7 +80,7 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
 def check_result(log_dir, output_dir, time_limit):
     compile_error_fp = os.path.join(log_dir, "compile.err")
     if os.stat(compile_error_fp).st_size != 0:
-        return JudgementStatusType.CompileError
+        return JudgementStatusType.CompileError, ''
 
     for testcase in sorted([tc for tc in os.listdir(output_dir)]):
         desired_output_fp = os.path.join(output_dir, testcase)
