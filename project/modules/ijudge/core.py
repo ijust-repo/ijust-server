@@ -28,7 +28,7 @@ def run(code_path, prog_lang, testcase_dir, time_limit, space_limit):
     space_limit = "%sMB" % (space_limit + 0) # TODO(AminHP): We must calculate os space usage
 
     run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, space_limit)
-    return check_result(log_dir, output_dir)
+    return check_result(log_dir, output_dir, time_limit)
 
 
 def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, space_limit):
@@ -77,10 +77,10 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
         pass
 
 
-def check_result(log_dir, output_dir):
+def check_result(log_dir, output_dir, time_limit):
     compile_error_fp = os.path.join(log_dir, "compile.err")
     if os.stat(compile_error_fp).st_size != 0:
-        return JudgementStatusType.CompileError
+        return JudgementStatusType.CompileError, ''
 
     for testcase in sorted([tc for tc in os.listdir(output_dir)]):
         desired_output_fp = os.path.join(output_dir, testcase)
@@ -89,16 +89,19 @@ def check_result(log_dir, output_dir):
         code_stat_fp = "%s.stt" % os.path.join(log_dir, testcase)
 
         if os.stat(code_error_fp).st_size != 0:
-            return JudgementStatusType.RuntimeError
+            return JudgementStatusType.RuntimeError, testcase
+
+        if not os.path.exists(code_stat_fp):
+            return JudgementStatusType.TimeExceeded, testcase
 
         with open(code_stat_fp) as stat_file:
             line = stat_file.readline()
-            running_time = float(line)
-            if running_time == -1:
-                return JudgementStatusType.TimeExceeded
+            run_time = float(line)
+            if run_time > time_limit:
+                return JudgementStatusType.TimeExceeded, testcase
 
         if not os.path.exists(code_output_fp):
-            return JudgementStatusType.RuntimeError
+            return JudgementStatusType.RuntimeError, testcase
 
         with open(code_output_fp) as output_file, \
              open(desired_output_fp) as desired_output_file:
@@ -110,6 +113,6 @@ def check_result(log_dir, output_dir):
             desired_output = desired_output.strip()
 
             if output != desired_output:
-                return JudgementStatusType.WrongAnswer
+                return JudgementStatusType.WrongAnswer, testcase
 
-    return JudgementStatusType.Accepted
+    return JudgementStatusType.Accepted, ''
