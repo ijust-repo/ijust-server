@@ -163,7 +163,7 @@ class Result(db.Document):
             Result.objects(pk=str(self.pk)).update(**update_query)
 
 
-    def to_json(self):
+    def to_json(self, original_problems):
         from copy import deepcopy
         teams = deepcopy(self.teams)
         teams_list = []
@@ -171,11 +171,16 @@ class Result(db.Document):
             t = teams[team_id]
             t['team_id'] = team_id
             problems_list = []
-            for problem_id in t['problems']:
-                p = t['problems'][problem_id]
-                p['problem_id'] = problem_id
+            for problem in original_problems:
+                p=dict(
+                        p['problem_id'] = str(problem.pk)
+                        p['title'] = str(problem.title)
+                        if str(problem.pk) in t['problems']:
+                            p.update(t['problems'][str(problem.pk)])
+                        else :
+                            p['solved'] = "unknown"
+                      )
                 problems_list.append(p)
-                p['title'] = Problem.objects.get(pk=problem_id).title
             problems_list.sort(key=lambda c:c["title"])
             t['problems'] = problems_list
             teams_list.append(t)
@@ -304,8 +309,8 @@ class Contest(db.Document):
 
     def to_json_result(self):
         return dict(
-            result = self.result.to_json(),
-            teams = {str(t.pk): t.name for t in self.accepted_teams},
+            result = self.result.to_json(self.problems),
+            teams = {str(t.pk): {t.name} for t in self.accepted_teams},
             problems = {str(p.pk): p.title for p in self.problems}
         )
 
