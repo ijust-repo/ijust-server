@@ -164,7 +164,25 @@ class Result(db.Document):
 
 
     def to_json(self):
-        return self.teams
+        from copy import deepcopy
+        teams = deepcopy(self.teams)
+        teams_list = []
+        for team_id in teams:
+            t = teams[team_id]
+            t['team_id'] = team_id
+            problems_list = []
+            for problem_id in t['problems']:
+                p = t['problems'][problem_id]
+                p['problem_id'] = problem_id
+                problems_list.append(p)
+                p['title'] = Problem.objects.get(pk=problem_id).title
+            problems_list.sort(key=lambda c:c["title"])
+            t['problems'] = problems_list
+            teams_list.append(t)
+
+        teams_list.sort(key=lambda d:d["penalty"])
+        teams_list.sort(key=lambda d:d["solved_count"], reverse=True)
+        return teams_list
 
 
 
