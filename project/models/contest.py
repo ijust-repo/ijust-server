@@ -170,25 +170,26 @@ class Result(db.Document):
         for team_id in teams:
             t = teams[team_id]
             t['team_id'] = team_id
+	    t['team_name'] = Team.objects.get(pk=team_id).name
             problems_list = []
             for problem in original_problems:
                 p={
-                        'problem_id': str(problem.pk)
-                        'title': str(problem.title)
+                        'problem_id': str(problem.pk),
+                        'title': problem.title
                       }
                 if str(problem.pk) in t['problems']:
                     p.update(t['problems'][str(problem.pk)])
                 else :
-                    p['solved'] : "unknown"
+                    p['solved'] = "unknown"
 
-            problems_list.append(p)
+            	problems_list.append(p)
             problems_list.sort(key=lambda c:c["title"])
             t['problems'] = problems_list
             teams_list.append(t)
 
         teams_list.sort(key=lambda d:d["penalty"])
         teams_list.sort(key=lambda d:d["solved_count"], reverse=True)
-        return teams_list
+	return teams_list
 
 
 
@@ -309,10 +310,9 @@ class Contest(db.Document):
 
 
     def to_json_result(self):
+	import json
         return dict(
             result = self.result.to_json(self.problems),
-            teams = {str(t.pk): {t.name} for t in self.accepted_teams},
-            problems = {str(p.pk): p.title for p in self.problems}
         )
 
 
