@@ -173,13 +173,14 @@ class Result(db.Document):
             problems_list = []
             for problem in original_problems:
                 p={
-                        p['problem_id'] : str(problem.pk)
-                        p['title'] : str(problem.title)
-                        if str(problem.pk) in t['problems']:
-                            p.update(t['problems'][str(problem.pk)])
-                        else :
-                            p['solved'] : "unknown"
+                        'problem_id': str(problem.pk)
+                        'title': str(problem.title)
                       }
+                if str(problem.pk) in t['problems']:
+                    p.update(t['problems'][str(problem.pk)])
+                else :
+                    p['solved'] : "unknown"
+
             problems_list.append(p)
             problems_list.sort(key=lambda c:c["title"])
             t['problems'] = problems_list
