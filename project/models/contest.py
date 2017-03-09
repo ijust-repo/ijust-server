@@ -172,15 +172,15 @@ class Result(db.Document):
             t['team_id'] = team_id
             problems_list = []
             for problem in original_problems:
-                p=dict(
-                        p['problem_id'] = str(problem.pk)
-                        p['title'] = str(problem.title)
+                p={
+                        p['problem_id'] : str(problem.pk)
+                        p['title'] : str(problem.title)
                         if str(problem.pk) in t['problems']:
                             p.update(t['problems'][str(problem.pk)])
                         else :
-                            p['solved'] = "unknown"
-                      )
-                problems_list.append(p)
+                            p['solved'] : "unknown"
+                      }
+            problems_list.append(p)
             problems_list.sort(key=lambda c:c["title"])
             t['problems'] = problems_list
             teams_list.append(t)
