@@ -9,7 +9,7 @@ RUN apt-get install -y \
 	libcurl4-nss-dev \
 	supervisor docker.io
 
-RUN useradd cel
+#RUN useradd cel
 
 RUN pip install --upgrade pip
 RUN pip install uwsgi
