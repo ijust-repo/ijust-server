@@ -5,6 +5,8 @@ __author__ = 'AminHP'
 import os
 import shutil
 import zipfile
+import StringIO
+import base64
 
 # flask imports
 from flask import jsonify, request, g, send_file, abort
@@ -1544,7 +1546,10 @@ def problem_download_body(cid, pid):
                (now > obj.ends_at)):
             return abort(403, "You aren't allowed to see problem body")
 
-        return send_file(problem_obj.body_path)
+        data = open(problem_obj.body_path).read()
+        data = base64.b64encode(data)
+        data_io = StringIO.StringIO(data)
+        return send_file(data_io, mimetype='application/pdf')
     except IOError:
         return abort(404, "File does not exist")
     except (db.DoesNotExist, db.ValidationError):
