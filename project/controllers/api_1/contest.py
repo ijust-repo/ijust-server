@@ -1373,7 +1373,7 @@ def problem_upload_body(cid, pid):
         in: formData
         type: file
         required: true
-        description: Problem body file (pdf) (max size is 4mb)
+        description: Problem body file (pdf) (max size is 16M)
       - name: Access-Token
         in: header
         type: string
@@ -1391,7 +1391,7 @@ def problem_upload_body(cid, pid):
       404:
         description: Contest or problem does not exist
       413:
-        description: Request entity too large. (max is 4mg)
+        description: Request entity too large. (max size is 16M)
       415:
         description: Supported file type is only application/pdf
     """
@@ -1442,7 +1442,7 @@ def problem_upload_testcase(cid, pid):
         in: formData
         type: file
         required: true
-        description: Problem testcase file (zip) (max size is 4mb)
+        description: Problem testcase file (zip) (max size is 16M)
       - name: Access-Token
         in: header
         type: string
@@ -1460,7 +1460,7 @@ def problem_upload_testcase(cid, pid):
       404:
         description: Contest or problem does not exist
       413:
-        description: Request entity too large. (max is 4mg)
+        description: Request entity too large. (max size is 16M)
       415:
         description: Supported file type is only application/zip
     """

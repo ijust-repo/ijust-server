@@ -53,7 +53,7 @@ def create():
         in: formData
         type: file
         required: true
-        description: Code file (max size is 4mb)
+        description: Code file (max size is 16M)
       - name: Access-Token
         in: header
         type: string
@@ -73,7 +73,7 @@ def create():
       406:
         description: Contest has not started or has been finished
       413:
-        description: Request entity too large. (max is 4mg)
+        description: Request entity too large. (max size is 16M)
       415:
         description: Supported file type is only text/plain
     """
