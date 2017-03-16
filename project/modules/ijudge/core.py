@@ -83,7 +83,7 @@ def check_result(log_dir, output_dir, time_limit, space_limit):
     compile_error_fp = os.path.join(log_dir, "compile.err")
     st = check_compilation(compile_error_fp)
     if st is not None:
-        return st, ''
+        return st, None
 
     for testcase in sorted([tc for tc in os.listdir(output_dir)]):
         desired_output_fp = os.path.join(output_dir, testcase)
@@ -109,7 +109,7 @@ def check_result(log_dir, output_dir, time_limit, space_limit):
         if st is not None:
             return st, testcase
 
-    return JudgementStatusType.Accepted, ''
+    return JudgementStatusType.Accepted, None
 
 
 def check_compilation(compile_error_fp):
