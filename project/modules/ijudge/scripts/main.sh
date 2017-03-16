@@ -42,12 +42,8 @@ if [ -s "$CODE_PATH" ]; then
 	do
 		if [ -s "$tc" ]; then
 			NAME="$(basename $tc)"
-			START=$(date +%s.%N)
-			runuser -u restricted_user timeout "$TIME_LIMIT"s \
+			/usr/bin/time -v -o "$LOG_DIR/$NAME.stt" runuser -u restricted_user timeout "$TIME_LIMIT"s \
 				/bin/bash "$PL_SCRIPT_DIR/run.sh" < "$tc" 1> "$LOG_DIR/$NAME.out" 2> "$LOG_DIR/$NAME.err"
-			END=$(date +%s.%N)
-			DIFF=$(echo "$END - $START" | bc)
-			echo $DIFF > "$LOG_DIR/$NAME.stt"
 		fi
 	done
 	echo "end of tests"
