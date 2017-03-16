@@ -28,10 +28,6 @@ if [ ! -d "$LOG_DIR" ]; then
 		mkdir "$LOG_DIR"
 	fi
 
-if [ -z "$TAG" ]; then 
-	export TAG="$HOST_NAME"
-fi
-
 echo "begin compiling"
 
 
@@ -41,7 +37,7 @@ if [ -s "$CODE_PATH" ]; then
 
 	echo "compiled successfully"
 	echo "begin tests"
-	
+
 	for tc in "$TESTCASE_DIR"/*
 	do
 		if [ -s "$tc" ]; then
