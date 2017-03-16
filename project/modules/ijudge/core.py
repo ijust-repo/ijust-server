@@ -26,7 +26,6 @@ def run(code_path, prog_lang, testcase_dir, time_limit, space_limit):
     config_mod = imp.load_source('plconfig', config_file)
 
     time_limit = float(time_limit * config_mod.TIME_LIMIT_FACTOR)
-    space_limit = "%sMB" % space_limit
 
     run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, space_limit)
     return check_result(log_dir, output_dir, time_limit, space_limit)
@@ -70,7 +69,7 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
             remove = True, 
             stdout = True,
             stderr = True,
-            mem_limit = space_limit,
+            mem_limit = "%sMB" % space_limit,
             mem_swappiness = 0,
             volumes = volumes,
             environment = env
