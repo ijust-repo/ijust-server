@@ -505,7 +505,6 @@ def result(cid):
           properties:
             result:
               type: object
-              description: The result must be sorted by solved_count, then by penalty
               properties:
                 team_id*:
                   type: object
@@ -534,19 +533,29 @@ def result(cid):
                             solved:
                               type: boolean
             teams:
-              type: object
-              description: Teams dictionary (team_id => team_name)
-              properties:
-                team_id*:
-                  type: string
-                  description: Team name
+              type: array
+              description: Teams list (sorted by rank in contest)
+              items:
+                schema:
+                  properties:
+                    id:
+                      type: string
+                      description: Team id
+                    name:
+                      type: string
+                      description: Team name
             problems:
-              type: object
-              description: Problems dictionary (problem_id => problem_title)
-              properties:
-                problem_id*:
-                  type: string
-                  description: Problem title
+              type: array
+              description: Problems list
+              items:
+                schema:
+                  properties:
+                    id:
+                      type: string
+                      description: Problem id
+                    title:
+                      type: string
+                      description: Problem title
       401:
         description: Token is invalid or has expired
       403:
