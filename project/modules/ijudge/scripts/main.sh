@@ -43,7 +43,8 @@ if [ -s "$CODE_PATH" ]; then
 		if [ -s "$tc" ]; then
 			NAME="$(basename $tc)"
 			START=$(date +%s.%N)
-			timeout -k "$TIME_LIMIT"s "$TIME_LIMIT"s /bin/bash "$PL_SCRIPT_DIR/run.sh" < "$tc" 1> "$LOG_DIR/$NAME.out" 2> "$LOG_DIR/$NAME.err"
+			runuser -u restricted_user timeout "$TIME_LIMIT"s \
+				/bin/bash "$PL_SCRIPT_DIR/run.sh" < "$tc" 1> "$LOG_DIR/$NAME.out" 2> "$LOG_DIR/$NAME.err"
 			END=$(date +%s.%N)
 			DIFF=$(echo "$END - $START" | bc)
 			echo $DIFF > "$LOG_DIR/$NAME.stt"
