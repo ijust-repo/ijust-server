@@ -2,7 +2,7 @@ Mongo:
   image: mongo
   container_name: mongoc
   volumes:
-    - /srv/docker/mongo/datadir:/data/mongodb
+    - /srv/docker/mongo/datadir:/data/db
 
 Redis:
   image: redis
