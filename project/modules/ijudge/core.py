@@ -127,9 +127,9 @@ def check_stat(code_stat_fp, time_limit, space_limit):
     space = re.search('(Maximum resident set size \(kbytes\): )(.*)\n', stat).group(2)
     space = float(space) / 1000.
 
-    if time > time_limit:
+    if time >= time_limit:
         return JudgementStatusType.TimeExceeded
-    if space > space_limit:
+    if space >= space_limit:
         return JudgementStatusType.SpaceExceeded
     return None
 
