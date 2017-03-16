@@ -286,10 +286,22 @@ class Contest(db.Document):
 
 
     def to_json_result(self):
+
+        def compare(t1, t2):
+            r1 = result.get(t1['id'], {})
+            r2 = result.get(t2['id'], {})
+            if r1.get("solved_count", -1) == r2.get("solved_count", -1):
+                return r1.get("penalty", -1) - r2.get("penalty", -1)
+            return r2.get("solved_count", -1) - r1.get("solved_count", -1)
+
+        result = self.result.to_json()
+        all_teams = [dict(id=str(t.pk), name=t.name) for t in self.accepted_teams]
+        all_teams.sort(cmp=compare)
+
         return dict(
-            result = self.result.to_json(),
-            teams = {str(t.pk): t.name for t in self.accepted_teams},
-            problems = {str(p.pk): p.title for p in self.problems}
+            result = result,
+            teams = all_teams,
+            problems = [p.to_json_abs() for p in self.problems]
         )
 
 
