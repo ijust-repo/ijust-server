@@ -81,6 +81,8 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
 
 def check_result(log_dir, output_dir, time_limit, space_limit):
     compile_error_fp = os.path.join(log_dir, "compile.err")
+
+    ## check compile error
     st = check_compilation(compile_error_fp)
     if st is not None:
         return st, open(compile_error_fp).read()
