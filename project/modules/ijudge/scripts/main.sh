@@ -42,6 +42,7 @@ if [ -s "$CODE_PATH" ]; then
 	do
 		if [ -s "$tc" ]; then
 			NAME="$(basename $tc)"
+			ulimit -s hard
 			/usr/bin/time -v -o "$LOG_DIR/$NAME.stt" runuser -u restricted_user timeout "$TIME_LIMIT"s \
 				/bin/bash "$PL_SCRIPT_DIR/run.sh" < "$tc" 1> "$LOG_DIR/$NAME.out" 2> "$LOG_DIR/$NAME.err"
 		fi

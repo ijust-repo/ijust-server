@@ -69,7 +69,7 @@ def run_in_container(code_path, pl_script_dir, input_dir, log_dir, time_limit, s
             remove = True, 
             stdout = True,
             stderr = True,
-            mem_limit = "%sMB" % space_limit,
+            mem_limit = "%sMB" % space_limit + 10,
             mem_swappiness = 0,
             cpu_quota = 100000,
             volumes = volumes,
