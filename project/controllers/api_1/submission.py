@@ -42,7 +42,7 @@ def create():
       - name: team_id
         in: formData
         type: string
-        required: true
+        required: false
         description: If of team
       - name: prog_lang
         in: formData
@@ -67,7 +67,8 @@ def create():
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner or member of the team
+        description: (You aren't owner or member of the team)
+                     (You aren't owner or admin of the contest)
       404:
         description: Contest or problem or team does not exist
       406:
@@ -87,60 +88,65 @@ def create():
             return abort(415, "Supported file type is only text/plain")
 
         json = form.to_json()
-        code = form.code.data
 
-        problem_obj = Problem.objects.get(pk=json['problem_id'])
-        team_obj = Team.objects.get(pk=json['team_id'])
-        contest_obj = Contest.objects.get(pk=json['contest_id'], accepted_teams=team_obj, problems=problem_obj)
         user_obj = User.objects.get(pk=g.user_id)
+        problem_obj = Problem.objects.get(pk=json['problem_id'])
 
-        if not team_obj.is_user_in_team(user_obj):
-            return abort(403, "You aren't owner or member of the team")
+        if not json['team_id']:
+            contest_obj = Contest.objects.get(pk=json['contest_id'], problems=problem_obj)
+            if (user_obj != contest_obj.owner) and (not user_obj in contest_obj.admins):
+                return abort(403, "You aren't owner or admin of the contest")
+        else:
+            team_obj = Team.objects.get(pk=json['team_id'])
+            contest_obj = Contest.objects.get(pk=json['contest_id'], problems=problem_obj, accepted_teams=team_obj)
+            if not team_obj.is_user_in_team(user_obj):
+                return abort(403, "You aren't owner or member of the team")
 
-        now = utcnowts()
-        if now < contest_obj.starts_at or now > contest_obj.ends_at:
-            return abort(406, "Contest has not started or has been finished")
+            now = utcnowts()
+            if now < contest_obj.starts_at or now > contest_obj.ends_at:
+                return abort(406, "Contest has not started or has been finished")
 
         obj = Submission()
         obj.populate(json)
         obj.contest = contest_obj
         obj.problem = problem_obj
-        obj.team = team_obj
+        obj.team = team_obj if json['team_id'] else None
         obj.user = user_obj
         obj.save()
 
-        file_obj = code
+        file_obj = form.code.data
         directory = os.path.dirname(obj.code_path)
         if not os.path.exists(directory):
             os.makedirs(directory)
         file_obj.save(obj.code_path)
 
-        check_code_task.delay(str(obj.pk))
+        check_code_task.delay(str(obj.pk), False if json['team_id'] else True)
 
         return "", 201
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest or problem or team does not exist")
 
 
-@app.api_route('team/<string:tid>/contest/<string:cid>/', methods=['GET'])
+@app.api_route('contest/<string:cid>', methods=['GET'])
+@app.api_route('contest/<string:cid>/team/<string:tid>', methods=['GET'])
 @auth.authenticate
-def list(tid, cid):
+def list(cid, tid=None):
     """
     Get All The Team Submissions in a Contest
     ---
     tags:
       - submission
     parameters:
-      - name: tid
-        in: path
-        type: string
-        required: true
-        description: Id of team
       - name: cid
         in: path
         type: string
         required: true
         description: Id of contest
+      - name: tid
+        in: path
+        type: string
+        required: false
+        description: Id of team
       - name: Access-Token
         in: header
         type: string
@@ -183,44 +189,46 @@ def list(tid, cid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner or member of the team
+        description: (You aren't owner or member of the team)
+                     (You aren't owner or admin of the contest)
       404:
         description: Team or contest does not exist
     """
 
     try:
-        team_obj = Team.objects.get(pk=tid)
-        contest_obj = Contest.objects.get(pk=cid, accepted_teams=team_obj)
         user_obj = User.objects.get(pk=g.user_id)
-
-        if not team_obj.is_user_in_team(user_obj):
-            return abort(403, "You aren't owner or member of the team")
+        if not tid:
+            contest_obj = Contest.objects.get(pk=cid)
+            if (user_obj != contest_obj.owner) and (not user_obj in contest_obj.admins):
+                return abort(403, "You aren't owner or admin of the contest")
+        else:
+            team_obj = Team.objects.get(pk=tid)
+            contest_obj = Contest.objects.get(pk=cid, accepted_teams=team_obj)
+            if not team_obj.is_user_in_team(user_obj):
+                return abort(403, "You aren't owner or member of the team")
 
         submissions = Submission.objects.filter(
-            contest=contest_obj,
-            team=team_obj).order_by('-submitted_at')
+            contest = contest_obj,
+            team = team_obj if tid else None
+        ).order_by('-submitted_at')
 
         submissions = [s.to_json() for s in submissions]
-
         return jsonify(submissions=submissions), 200
+
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Team or contest does not exist")
 
 
-@app.api_route('team/<string:tid>/contest/<string:cid>/problem/<string:pid>', methods=['GET'])
+@app.api_route('contest/<string:cid>/problem/<string:pid>', methods=['GET'])
+@app.api_route('contest/<string:cid>/problem/<string:pid>/team/<string:tid>', methods=['GET'])
 @auth.authenticate
-def list_problem(tid, cid, pid):
+def list_problem(cid, pid, tid=None):
     """
     Get All The Team Submissions in a Contest for a Problem
     ---
     tags:
       - submission
     parameters:
-      - name: tid
-        in: path
-        type: string
-        required: true
-        description: Id of team
       - name: cid
         in: path
         type: string
@@ -231,6 +239,11 @@ def list_problem(tid, cid, pid):
         type: string
         required: true
         description: Id of problem
+      - name: tid
+        in: path
+        type: string
+        required: false
+        description: Id of team
       - name: Access-Token
         in: header
         type: string
@@ -246,28 +259,35 @@ def list_problem(tid, cid, pid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner or member of the team
+        description: (You aren't owner or member of the team)
+                     (You aren't owner or admin of the contest)
       404:
         description: Team or contest or problem does not exist
     """
 
     try:
-        team_obj = Team.objects.get(pk=tid)
-        problem_obj = Problem.objects.get(pk=pid)
-        contest_obj = Contest.objects.get(pk=cid, accepted_teams=team_obj, problems=problem_obj)
         user_obj = User.objects.get(pk=g.user_id)
+        problem_obj = Problem.objects.get(pk=pid)
 
-        if not team_obj.is_user_in_team(user_obj):
-            return abort(403, "You aren't owner or member of the team")
+        if not tid:
+            contest_obj = Contest.objects.get(pk=cid, problems=problem_obj)
+            if (user_obj != contest_obj.owner) and (not user_obj in contest_obj.admins):
+                return abort(403, "You aren't owner or admin of the contest")
+        else:
+            team_obj = Team.objects.get(pk=tid)
+            contest_obj = Contest.objects.get(pk=cid, problems=problem_obj, accepted_teams=team_obj)
+            if not team_obj.is_user_in_team(user_obj):
+                return abort(403, "You aren't owner or member of the team")
 
         submissions = Submission.objects.filter(
-            contest=contest_obj,
-            team=team_obj,
-            problem=problem_obj).order_by('-submitted_at')
+            contest = contest_obj,
+            problem = problem_obj,
+            team = team_obj if tid else None
+        ).order_by('-submitted_at')
 
         submissions = [s.to_json() for s in submissions]
-
         return jsonify(submissions=submissions), 200
+
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Team or contest or problem does not exist")
 
@@ -297,7 +317,8 @@ def download_code(sid):
       401:
         description: Token is invalid or has expired
       403:
-        description: You aren't owner or member of the team
+        description: (You aren't owner or member of the team)
+                     (You aren't owner or admin of the contest)
       404:
         description: Submission does not exist
     """
@@ -306,8 +327,12 @@ def download_code(sid):
         obj = Submission.objects.get(pk=sid)
         user_obj = User.objects.get(pk=g.user_id)
 
-        if not obj.team.is_user_in_team(user_obj):
-            return abort(403, "You aren't owner or member of the team")
+        if not obj.team:
+            if (user_obj != obj.contest.owner) and (not user_obj in obj.contest.admins):
+                return abort(403, "You aren't owner or admin of the contest")
+        else:
+            if not obj.team.is_user_in_team(user_obj):
+                return abort(403, "You aren't owner or member of the team")
 
         return send_file(obj.code_path)
     except (db.DoesNotExist, db.ValidationError):
@@ -316,12 +341,12 @@ def download_code(sid):
 
 
 @celery.task()
-def check_code_task(sid):
+def check_code_task(sid, test):
     obj = Submission.objects.get(pk=sid)
-    check_code(obj)
+    check_code(obj, test)
 
 
-def check_code(obj):
+def check_code(obj, test):
     status, reason = ijudge.judge(
         obj.code_path,
         obj.prog_lang,
@@ -332,7 +357,8 @@ def check_code(obj):
     obj.status = status
     obj.reason = reason
     obj.save()
-    update_contest_result(obj)
+    if not test:
+        update_contest_result(obj)
 
 
 def update_contest_result(obj):

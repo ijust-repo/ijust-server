@@ -16,7 +16,7 @@ from project.models.submission import ProgrammingLanguageType
 class UploadCode(FlaskForm):
     contest_id = StringField(validators=[DataRequired()])
     problem_id = StringField(validators=[DataRequired()])
-    team_id = StringField(validators=[DataRequired()])
+    team_id = StringField(validators=[], default=None)
     prog_lang = IntegerField(validators=[InputRequired(), NumberRange(min=0, max=len(ProgrammingLanguageType)-1)])
     code = FileField(validators=[DataRequired()])
     #allowed_extensions = ['text/plain', 'text/x-c', 'text/x-java-source', 'text/x-script.pyhton']

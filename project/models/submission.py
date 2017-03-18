@@ -20,7 +20,7 @@ class Submission(db.Document):
 
     contest = db.ReferenceField('Contest', required=True)
     problem = db.ReferenceField('Problem', required=True)
-    team = db.ReferenceField('Team', required=True)
+    team = db.ReferenceField('Team')
     user = db.ReferenceField('User', required=True)
 
     status = IntEnumField(enum=JudgementStatusType, required=True, default=JudgementStatusType.Pending)
@@ -44,7 +44,7 @@ class Submission(db.Document):
             app.config['SUBMISSION_DIR'],
             str(self.contest.pk),
             str(self.problem.pk),
-            str(self.team.pk),
+            str(self.team.pk) if self.team else 'test',
             str(self.submitted_at),
             self.filename
         )
