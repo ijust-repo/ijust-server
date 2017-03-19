@@ -81,7 +81,6 @@ def create():
         obj.owner = User.objects.get(id=g.user_id)
         obj.populate(json)
         obj.save()
-        obj.create_result()
         return jsonify(obj.to_json()), 201
 
     except db.NotUniqueError:

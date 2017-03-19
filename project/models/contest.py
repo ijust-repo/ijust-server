@@ -190,17 +190,19 @@ class Contest(db.Document):
         ]
     }
 
-    def delete(self, *args, **kwargs):
-        if self.result:
-            self.result.delete()
-        super(Contest, self).delete(*args, **kwargs)
-
-
-    def create_result(self):
+    @classmethod
+    def post_save(cls, sender, document, **kwargs):
+        if document.result:
+            return
         result_obj = Result()
         result_obj.save()
-        self.result = result_obj
-        self.save()
+        document.result = result_obj
+        document.save()
+
+    @classmethod
+    def pre_delete(cls, sender, document, **kwargs):
+        if document.result:
+            document.result.delete()
 
 
     def is_user_in_contest(self, user_obj):
@@ -307,6 +309,10 @@ class Contest(db.Document):
             teams = all_teams,
             problems = [p.to_json_abs() for p in self.problems]
         )
+
+
+db.post_save.connect(Contest.post_save, sender=Contest)
+db.pre_delete.connect(Contest.pre_delete, sender=Contest)
 
 
 
