@@ -16,6 +16,7 @@ from project.models.submission import Submission, JudgementStatusType
 from project.models.contest import Problem, Contest
 from project.models.team import Team
 from project.models.user import User
+from project.models.submission import Submission, JudgementStatusType
 from project.forms.submission import UploadCode
 from project.extensions import celery
 
@@ -72,7 +73,8 @@ def create():
       404:
         description: Contest or problem or team does not exist
       406:
-        description: Contest has not started or has been finished
+        description: (Contest has not started or has been finished)
+                     (You have too many pending submissions)
       413:
         description: Request entity too large. (max size is 16M)
       415:
@@ -88,16 +90,17 @@ def create():
             return abort(415, "Supported file type is only text/plain")
 
         json = form.to_json()
+        tid = json['team_id']
 
         user_obj = User.objects.get(pk=g.user_id)
         problem_obj = Problem.objects.get(pk=json['problem_id'])
 
-        if not json['team_id']:
+        if not tid:
             contest_obj = Contest.objects.get(pk=json['contest_id'], problems=problem_obj)
             if (user_obj != contest_obj.owner) and (not user_obj in contest_obj.admins):
                 return abort(403, "You aren't owner or admin of the contest")
         else:
-            team_obj = Team.objects.get(pk=json['team_id'])
+            team_obj = Team.objects.get(pk=tid)
             contest_obj = Contest.objects.get(pk=json['contest_id'], problems=problem_obj, accepted_teams=team_obj)
             if not team_obj.is_user_in_team(user_obj):
                 return abort(403, "You aren't owner or member of the team")
@@ -106,11 +109,19 @@ def create():
             if now < contest_obj.starts_at or now > contest_obj.ends_at:
                 return abort(406, "Contest has not started or has been finished")
 
+        pending_submissions_num = Submission.objects(
+            contest = contest_obj,
+            team = team_obj if tid else None,
+            status = JudgementStatusType.Pending
+        ).count()
+        if pending_submissions_num >= len(contest_obj.problems):
+            return abort(406, "You have too many pending submissions")
+
         obj = Submission()
         obj.populate(json)
         obj.contest = contest_obj
         obj.problem = problem_obj
-        obj.team = team_obj if json['team_id'] else None
+        obj.team = team_obj if tid else None
         obj.user = user_obj
         obj.save()
 
@@ -120,7 +131,7 @@ def create():
             os.makedirs(directory)
         file_obj.save(obj.code_path)
 
-        check_code_task.delay(str(obj.pk), False if json['team_id'] else True)
+        check_code_task.delay(str(obj.pk), False if tid else True)
 
         return "", 201
     except (db.DoesNotExist, db.ValidationError):
