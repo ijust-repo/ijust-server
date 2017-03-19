@@ -871,7 +871,7 @@ def team_accept(cid, tid):
         description: Token of current user
     responses:
       200:
-        description: Team Accepted
+        description: Successfully accepted
       401:
         description: Token is invalid or has expired
       403:
@@ -920,7 +920,7 @@ def team_reject(cid, tid):
         description: Token of current user
     responses:
       200:
-        description: Team Rejected
+        description: Successfully rejected
       401:
         description: Token is invalid or has expired
       403:
@@ -938,6 +938,55 @@ def team_reject(cid, tid):
             return abort(403, "You aren't owner or admin of the contest")
 
         obj.update(pull__pending_teams=team_obj)
+        return '', 200
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "Contest or Team does not exist")
+
+
+@app.api_route('<string:cid>/team/<string:tid>/kick', methods=['DELETE'])
+@auth.authenticate
+def team_kick(cid, tid):
+    """
+    Team Kick
+    ---
+    tags:
+      - contest
+    parameters:
+      - name: cid
+        in: path
+        type: string
+        required: true
+        description: Id of contest
+      - name: tid
+        in: path
+        type: string
+        required: true
+        description: Id of team
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successfully kicked
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner or admin of the contest
+      404:
+        description: Contest or Team does not exist
+    """
+
+    try:
+        team_obj = Team.objects.get(pk=tid)
+        obj = Contest.objects.get(pk=cid, accepted_teams=team_obj)
+        user_obj = User.objects.get(pk=g.user_id)
+
+        if (user_obj != obj.owner) and (not user_obj in obj.admins):
+            return abort(403, "You aren't owner or admin of the contest")
+
+        obj.update(pull__accepted_teams=team_obj)
         return '', 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest or Team does not exist")
