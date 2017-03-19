@@ -9,6 +9,9 @@ from enum import Enum
 # project imports
 from project import app
 from project.extensions import db
+from project.models.user import User
+from project.models.team import Team
+from project.models.contest import Contest, Problem, Result
 from project.modules.datetime import utcnowts
 from project.modules.fields import IntEnumField
 from project.modules.ijudge.types import JudgementStatusType, ProgrammingLanguageType
