@@ -16,7 +16,6 @@ from project.models.submission import Submission, JudgementStatusType
 from project.models.contest import Problem, Contest
 from project.models.team import Team
 from project.models.user import User
-from project.models.submission import Submission, JudgementStatusType
 from project.forms.submission import UploadCode
 from project.extensions import celery
 

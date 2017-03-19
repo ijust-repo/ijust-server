@@ -17,6 +17,7 @@ from project.extensions import db, auth
 from project.modules.datetime import utcnowts
 from project.modules.paginator import paginate
 from project.models.contest import Contest, Problem, ContestDateTimeError
+from project.models.submission import Submission
 from project.models.team import Team
 from project.models.user import User
 from project.forms.problem import UploadProblemBody, UploadTestCase
@@ -693,9 +694,9 @@ def team_join(cid):
 
 @app.api_route('<string:cid>/team/<string:tid>', methods=['DELETE'])
 @auth.authenticate
-def team_unjoin(cid, tid):
+def team_leave(cid, tid):
     """
-    Team Unjoin
+    Team Leave
     ---
     tags:
       - contest
@@ -717,7 +718,7 @@ def team_unjoin(cid, tid):
         description: Token of current user
     responses:
       200:
-        description: Successfully unjoined
+        description: Successfully left
       400:
         description: Bad request
       401:
@@ -726,16 +727,24 @@ def team_unjoin(cid, tid):
         description: You aren't owner of the team
       404:
         description: Contest or Team does not exist
+      406:
+        description: You aren't in the contest
     """
 
     try:
         team_obj = Team.objects.get(pk=tid)
-        obj = Contest.objects.get(pk=cid, pending_teams=team_obj)
+        obj = Contest.objects.get(pk=cid)
 
         if str(team_obj.owner.pk) != g.user_id:
             return abort(403, "You aren't owner of the team")
 
-        obj.update(pull__pending_teams=team_obj)
+        if team_obj in obj.pending_teams:
+            obj.update(pull__pending_teams=team_obj)
+        elif team_obj in obj.accepted_teams:
+            Submission.objects(team=team_obj).delete()
+            obj.update(pull__accepted_teams=team_obj)
+        else:
+            return abort(406, "You aren't in the contest")
         return '', 200
     except (db.DoesNotExist, db.ValidationError):
         return abort(404, "Contest or Team does not exist")

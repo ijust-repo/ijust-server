@@ -185,6 +185,7 @@ class Contest(db.Document):
             '-starts_at',
             'owner',
             'admins',
+            'pending_teams',
             'accepted_teams',
             'problems'
         ]
