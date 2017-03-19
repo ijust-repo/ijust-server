@@ -16,3 +16,4 @@ python-magic==0.4.12
 enum34==1.1.6
 requests==2.13.0
 docker==2.1.0
+blinker==1.4

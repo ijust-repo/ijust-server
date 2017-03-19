@@ -254,3 +254,46 @@ def list():
     user_obj = User.objects.get(pk=g.user_id)
     teams = Team.teams(user_obj)
     return jsonify(teams), 200
+
+
+@app.api_route('<string:tid>', methods=['DELETE'])
+@auth.authenticate
+def delete(tid):
+    """
+    Team Delete
+    ---
+    tags:
+      - team
+    parameters:
+      - name: tid
+        in: path
+        type: string
+        required: true
+        description: Id of team
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successfully deleted
+      401:
+        description: Token is invalid or has expired
+      403:
+        description: You aren't owner of the team
+      404:
+        description: Team does not exist
+    """
+
+    try:
+        obj = Team.objects.get(pk=tid)
+        user_obj = User.objects.get(pk=g.user_id)
+
+        if user_obj != obj.owner:
+            return abort(403, "You aren't owner of the team")
+
+        obj.delete()
+        return '', 200
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "Team does not exist")

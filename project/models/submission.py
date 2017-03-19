@@ -3,6 +3,7 @@ __author__ = 'AminHP'
 
 # python imports
 import os
+import shutil
 from enum import Enum
 
 # project imports
@@ -18,9 +19,9 @@ class Submission(db.Document):
     prog_lang = IntEnumField(enum=ProgrammingLanguageType, required=True)
     submitted_at = db.IntField(required=True, default=lambda: utcnowts())
 
-    contest = db.ReferenceField('Contest', required=True)
-    problem = db.ReferenceField('Problem', required=True)
-    team = db.ReferenceField('Team')
+    contest = db.ReferenceField('Contest', required=True, reverse_delete_rule=db.CASCADE)
+    problem = db.ReferenceField('Problem', required=True, reverse_delete_rule=db.CASCADE)
+    team = db.ReferenceField('Team', reverse_delete_rule=db.CASCADE)
     user = db.ReferenceField('User', required=True)
 
     status = IntEnumField(enum=JudgementStatusType, required=True, default=JudgementStatusType.Pending)
@@ -37,17 +38,27 @@ class Submission(db.Document):
         ]
     }
 
-
     @property
-    def code_path(self):
+    def data_dir(self):
         return os.path.join(
             app.config['SUBMISSION_DIR'],
             str(self.contest.pk),
             str(self.problem.pk),
             str(self.team.pk) if self.team else 'test',
-            str(self.submitted_at),
+            str(self.submitted_at)
+        )
+
+    @property
+    def code_path(self):
+        return os.path.join(
+            self.data_dir,
             self.filename
         )
+
+    @classmethod
+    def pre_delete(cls, sender, document, **kwargs):
+        if os.path.exists(document.data_dir):
+            shutil.rmtree(document.data_dir)
 
 
     def populate(self, json):
@@ -66,3 +77,6 @@ class Submission(db.Document):
             status = self.status.name,
             reason = self.reason
         )
+
+
+db.pre_delete.connect(Submission.pre_delete, sender=Submission)

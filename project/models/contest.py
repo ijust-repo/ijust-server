@@ -22,7 +22,6 @@ class Problem(db.Document):
         'collection': 'problems'
     }
 
-
     @property
     def body_path(self):
         return os.path.join(app.config['PROBLEM_DIR'], str(self.pk))
@@ -31,12 +30,12 @@ class Problem(db.Document):
     def testcase_dir(self):
         return os.path.join(app.config['TESTCASE_DIR'], str(self.pk))
 
-    def delete(self):
+    def delete(self, *args, **kwargs):
         if os.path.exists(self.body_path):
             os.remove(self.body_path)
         if os.path.exists(self.testcase_dir):
             shutil.rmtree(self.testcase_dir)
-        super(Problem, self).delete()
+        super(Problem, self).delete(*args, **kwargs)
 
 
     def populate(self, json):
@@ -171,7 +170,7 @@ class Result(db.Document):
 class Contest(db.Document):
     name = db.StringField(required=True, unique=True)
     owner = db.ReferenceField('User', required=True)
-    admins = db.ListField(db.ReferenceField('User', reverse_delete_rule=db.PULL))
+    admins = db.ListField(db.ReferenceField('User'))
     created_at = db.IntField(required=True, default=lambda: utcnowts())
     starts_at = db.IntField(required=True)
     ends_at = db.IntField(required=True)
@@ -190,6 +189,11 @@ class Contest(db.Document):
             'problems'
         ]
     }
+
+    def delete(self, *args, **kwargs):
+        if self.result:
+            self.result.delete()
+        super(Contest, self).delete(*args, **kwargs)
 
 
     def create_result(self):

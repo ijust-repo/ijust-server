@@ -298,8 +298,6 @@ def delete(cid):
         description: You aren't owner of the contest
       404:
         description: Contest does not exist
-      406:
-        description: Contest has been started
     """
 
     try:
@@ -308,9 +306,6 @@ def delete(cid):
 
         if user_obj != obj.owner:
             return abort(403, "You aren't owner of the contest")
-
-        if utcnowts() >= obj.starts_at:
-            return abort(406, "Contest has been started")
 
         obj.delete()
         return '', 200
@@ -1345,8 +1340,6 @@ def problem_delete(cid, pid):
         description: You aren't owner or admin of the contest
       404:
         description: Contest or problem does not exist
-      406:
-        description: Contest has been started
     """
 
     try:
@@ -1356,9 +1349,6 @@ def problem_delete(cid, pid):
 
         if (user_obj != obj.owner) and (not user_obj in obj.admins):
             return abort(403, "You aren't owner or admin of the contest")
-
-        if utcnowts() >= obj.starts_at:
-            return abort(406, "Contest has been started")
 
         problem_obj.delete()
         obj.reload()
