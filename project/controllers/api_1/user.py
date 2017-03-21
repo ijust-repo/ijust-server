@@ -130,6 +130,30 @@ def login():
         return abort(404, "User does not exist")
 
 
+@app.api_route('login_with_token', methods=['POST'])
+@auth.authenticate
+def login_with_token():
+    """
+    Login with Token
+    ---
+    tags:
+      - user
+    parameters:
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successfully logged in
+      401:
+        description: Token is invalid or has expired
+    """
+
+    return '', 200
+
+
 @app.api_route('logout', methods=['POST'])
 @auth.authenticate
 def logout():
