@@ -229,3 +229,70 @@ def myinfo():
     """
 
     return info(uid=g.user_id)
+
+
+@app.api_route('', methods=['PUT'])
+@app.api_validate('user.edit_schema')
+@auth.authenticate
+def edit():
+    """
+    Edit
+    ---
+    tags:
+      - user
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: UserEdit
+          properties:
+            email:
+              type: string
+              example: new_baby@knight.org
+            password:
+              schema:
+                properties:
+                  old_password:
+                    type: string
+                    example: baby123
+                    minLength: 3
+                    maxLength: 32
+                  new_password:
+                    type: string
+                    example: baby123
+                    minLength: 3
+                    maxLength: 32
+      - name: Access-Token
+        in: header
+        type: string
+        required: true
+        description: Token of current user
+    responses:
+      200:
+        description: Successfully edited
+        schema:
+          $ref: "#/definitions/api_1_user_info_get_UserInfo"
+      400:
+        description: Bad request
+      401:
+        description: Token is invalid or has expired
+      404:
+        description: User does not exist
+      406:
+        description: Wrong password
+    """
+
+    json = request.json
+    try:
+        obj = User.objects.get(pk=g.user_id)
+        obj.populate(json)
+        if 'password' in json:
+            old_password = json['password']['old_password']
+            new_password = json['password']['new_password']
+            if not obj.change_password(old_password, new_password):
+                return abort(406, "Wrong password")
+        obj.save()
+        return jsonify(obj.to_json()), 200
+    except (db.DoesNotExist, db.ValidationError):
+        return abort(404, "User does not exist")

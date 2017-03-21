@@ -20,3 +20,12 @@ login_schema = Schema({
     Required('login'): unicode,
     Required('password'): unicode
 })
+
+
+edit_schema = Schema({
+    Optional('email'): Email(),
+    Optional('password'): Schema({
+        Required('old_password'): All(unicode, Length(min=3, max=32)),
+        Required('new_password'): All(unicode, Length(min=3, max=32))
+    })
+})
