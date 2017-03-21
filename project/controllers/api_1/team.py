@@ -284,6 +284,8 @@ def delete(tid):
         description: You aren't owner of the team
       404:
         description: Team does not exist
+      406:
+        description: The team has participated in a number of contests
     """
 
     try:
@@ -292,6 +294,9 @@ def delete(tid):
 
         if user_obj != obj.owner:
             return abort(403, "You aren't owner of the team")
+
+        if Contest.objects(accepted_teams=obj).count() > 0:
+            return abort(406, "The team has participated in a number of contests")
 
         obj.delete()
         return '', 200
