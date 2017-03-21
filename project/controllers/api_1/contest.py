@@ -145,6 +145,9 @@ def info(cid):
             is_active:
               type: boolean
               description: Contest is_active
+            is_ended:
+              type: boolean
+              description: Contest is_ended
             is_owner:
               type: boolean
               description: Contest is_owner
@@ -455,6 +458,9 @@ def list_owner():
                     is_active:
                       type: boolean
                       description: Contest is_active
+                    is_ended:
+                      type: boolean
+                      description: Contest is_ended
                     pending_teams_num:
                       type: integer
                       description: Contest number of pending teams
