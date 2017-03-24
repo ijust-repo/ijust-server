@@ -32,8 +32,9 @@ def signup():
           properties:
             username:
               type: string
-              pattern: ^[a-zA-Z0-9_]+$
+              pattern: ^[a-zA-Z0-9_]*$
               example: babyknight
+              minLength: 1
               maxLength: 32
             email:
               type: string

@@ -46,6 +46,7 @@ def create():
             name:
               type: string
               example: babyknight
+              minLength: 1
               maxLength: 32
             starts_at:
               type: integer
@@ -221,6 +222,7 @@ def edit(cid):
             name:
               type: string
               example: babyknight
+              minLength: 1
               maxLength: 32
             starts_at:
               type: integer
@@ -1022,6 +1024,7 @@ def problem_create(cid):
             title:
               type: string
               example: babyknight
+              minLength: 1
               maxLength: 32
             time_limit:
               type: number
@@ -1235,6 +1238,7 @@ def problem_edit(cid, pid):
             title:
               type: string
               example: babyknight
+              minLength: 1
               maxLength: 32
             time_limit:
               type: number

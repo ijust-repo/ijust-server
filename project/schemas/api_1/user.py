@@ -9,7 +9,7 @@ from project.modules.recaptcha_validator import ReCaptcha
 
 
 signup_schema = Schema({
-    Required('username'): All(unicode, Match(r'^[a-zA-Z0-9_]+$'), Length(max=32)),
+    Required('username'): All(unicode, Match(r'^[a-zA-Z0-9_]*$'), Length(min=1, max=32)),
     Required('email'): Email(),
     Required('password'): All(unicode, Length(min=3, max=32)),
     Required('recaptcha'): ReCaptcha()

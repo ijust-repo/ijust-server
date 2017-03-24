@@ -35,6 +35,7 @@ def create():
             name:
               type: string
               example: babyknight
+              minLength: 1
               maxLength: 32
             members:
               type: array
@@ -170,6 +171,7 @@ def edit(tid):
             name:
               type: string
               example: babyknight
+              minLength: 1
               maxLength: 32
             members:
               type: array
