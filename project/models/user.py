@@ -12,6 +12,8 @@ class User(db.Document):
     username = db.StringField(required=True, unique=True)
     email = db.StringField(required=True, unique=True)
     password = db.StringField(required=True)
+    firstname = db.StringField()
+    lastname = db.StringField()
 
     meta = {
         'collection': 'users',
@@ -44,6 +46,10 @@ class User(db.Document):
             self.username = json['username']
         if 'email' in json:
             self.email = json['email']
+        if 'firstname' in json:
+            self.firstname = json['firstname']
+        if 'lastname' in json:
+            self.lastname = json['lastname']
 
 
     def to_json(self):
@@ -51,6 +57,8 @@ class User(db.Document):
             id = str(self.pk),
             username = self.username,
             email = self.email,
+            firstname = self.firstname,
+            lastname = self.lastname
         )
 
 

@@ -215,6 +215,12 @@ def info(uid):
             email:
               type: string
               description: Email
+            firstname:
+              type: string
+              description: First name
+            lastname:
+              type: string
+              description: Last name
       401:
         description: Token is invalid or has expired
       404:
@@ -288,6 +294,14 @@ def edit():
                     example: baby123
                     minLength: 3
                     maxLength: 32
+            firstname:
+              type: string
+              minLength: 1
+              maxLength: 32
+            lastname:
+              type: string
+              minLength: 1
+              maxLength: 32
       - name: Access-Token
         in: header
         type: string

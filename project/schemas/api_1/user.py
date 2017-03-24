@@ -27,5 +27,7 @@ edit_schema = Schema({
     Optional('password'): Schema({
         Required('old_password'): All(unicode, Length(min=3, max=32)),
         Required('new_password'): All(unicode, Length(min=3, max=32))
-    })
+    }),
+    Optional('firstname'): All(unicode, Length(min=1, max=32)),
+    Optional('lastname'): All(unicode, Length(min=1, max=32))
 })
