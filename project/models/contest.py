@@ -66,6 +66,8 @@ class Problem(db.Document):
 
 class Result(db.Document):
     teams = db.DictField()
+    sorted_team_ids = db.ListField(db.StringField())
+    last_time_result_changed = db.FloatField(default=0)
 
     default_team_data = dict(
         problems = {},
@@ -96,18 +98,56 @@ class Result(db.Document):
         tqid, pqid = self._make_query_ids(tid, pid)
 
         find_query = {
-            'pk': str(self.pk),
+            "pk": str(self.pk),
             tqid: None
         }
-        update_query = {tqid: self.default_team_data}
+        update_query = {
+            tqid: self.default_team_data,
+            "add_to_set__sorted_team_ids": tid
+        }
         Result.objects(**find_query).update(**update_query)
 
         update_query = {("set__%s" % pqid): self.default_problem_data}
         find_query = {
-            'pk': str(self.pk),
+            "pk": str(self.pk),
             pqid: None
         }
         Result.objects(**find_query).update(**update_query)
+
+
+    def _sort(self, last_time_result_changed):
+
+        def compare(tid1, tid2):
+            r1 = teams[tid1]
+            r2 = teams[tid2]
+            if r1["solved_count"] == r2["solved_count"]:
+                return r1["penalty"] - r2["penalty"]
+            return r2["solved_count"] - r1["solved_count"]
+
+        aggregate_query = [
+            {
+                "$match": {
+                    "_id": self.pk
+                }
+            },
+            {
+                "$project": {
+                    "teams": "$teams",
+                    "sorted_team_ids": "$sorted_team_ids"
+                }
+            }
+        ]
+
+        aggregated_result = list(Result.objects.aggregate(*aggregate_query))[0]
+        teams = aggregated_result['teams']
+        sorted_team_ids = aggregated_result['sorted_team_ids']
+        sorted_team_ids.sort(cmp=compare)
+
+        find_query = {
+            "pk": str(self.pk),
+            "last_time_result_changed": last_time_result_changed
+        }
+        Result.objects(**find_query).update(set__sorted_team_ids=sorted_team_ids)
 
 
     def update_failed_try(self, tid, pid, submitted_at, penalty=20):
@@ -115,7 +155,7 @@ class Result(db.Document):
         tqid, pqid = self._make_query_ids(tid, pid)
 
         find_query = {
-            'pk': str(self.pk),
+            "pk": str(self.pk),
             ("%s__solved" % pqid): False
         }
         update_query = {
@@ -131,8 +171,8 @@ class Result(db.Document):
         tqid, pqid = self._make_query_ids(tid, pid)
 
         find_query = {
-            'pk': str(self.pk),
-            ("%s__solved"% pqid): False
+            "pk": str(self.pk),
+            ("%s__solved" % pqid): False
         }
         update_query = {
             ("set__%s__submitted_at" % pqid): submitted_at,
@@ -149,21 +189,21 @@ class Result(db.Document):
                     }
                 },
                 {
-                    '$project': {
-                        'last_penalty': ('$teams.%s.problems.%s.penalty' % (tid, pid))
+                    "$project": {
+                        "last_penalty": ("$teams.%s.problems.%s.penalty" % (tid, pid))
                     }
                 }
             ]
-            aggregate_result = list(Result.objects.aggregate(*aggregate_query))
-            last_penalty = aggregate_result[0]['last_penalty']
+            aggregated_result = list(Result.objects.aggregate(*aggregate_query))[0]
+            last_penalty = aggregated_result['last_penalty']
+            last_time_result_changed = utcnowts(microseconds=True)
             update_query = {
-                ("inc__%s__penalty" % tqid): last_penalty
+                ("inc__%s__penalty" % tqid): last_penalty,
+                "set__last_time_result_changed": last_time_result_changed
             }
+
             Result.objects(pk=str(self.pk)).update(**update_query)
-
-
-    def to_json(self):
-        return self.teams
+            self._sort(last_time_result_changed)
 
 
 
@@ -294,20 +334,15 @@ class Contest(db.Document):
 
 
     def to_json_result(self):
+        sorted_teams = [Team.objects.get(pk=tid) for tid in self.result.sorted_team_ids]
+        accepted_teams = set(self.accepted_teams)
 
-        def compare(t1, t2):
-            r1 = result.get(t1['id'], {})
-            r2 = result.get(t2['id'], {})
-            if r1.get("solved_count", -1) == r2.get("solved_count", -1):
-                return r1.get("penalty", -1) - r2.get("penalty", -1)
-            return r2.get("solved_count", -1) - r1.get("solved_count", -1)
-
-        result = self.result.to_json()
-        all_teams = [dict(id=str(t.pk), name=t.name) for t in self.accepted_teams]
-        all_teams.sort(cmp=compare)
+        all_teams = [t for t in sorted_teams if t in accepted_teams]
+        all_teams += accepted_teams.difference(sorted_teams)
+        all_teams = [dict(id=str(t.pk), name=t.name) for t in all_teams]
 
         return dict(
-            result = result,
+            result = self.result.teams,
             teams = all_teams,
             problems = [p.to_json_abs() for p in self.problems]
         )

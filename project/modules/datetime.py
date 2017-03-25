@@ -5,5 +5,7 @@ __author__ = 'AminHP'
 from time import time
 
 
-def utcnowts():
+def utcnowts(microseconds=False):
+    if microseconds:
+        return time()
     return int(time())

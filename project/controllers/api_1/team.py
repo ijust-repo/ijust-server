@@ -67,7 +67,7 @@ def create():
 
     json = request.json
     try:
-        owner = User.objects.get(id=g.user_id)
+        owner = User.objects.get(pk=g.user_id)
         my_teams = Team.teams(owner)
         if len(my_teams['owner_teams']) >= 5:
             return abort(406, "You can't create more teams")

@@ -79,7 +79,7 @@ def create():
     json = request.json
     try:
         obj = Contest()
-        obj.owner = User.objects.get(id=g.user_id)
+        obj.owner = User.objects.get(pk=g.user_id)
         obj.populate(json)
         obj.save()
         return jsonify(obj.to_json()), 201
