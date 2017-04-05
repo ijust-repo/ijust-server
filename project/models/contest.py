@@ -30,6 +30,7 @@ class Problem(db.Document):
     def testcase_dir(self):
         return os.path.join(app.config['TESTCASE_DIR'], str(self.pk))
 
+
     def delete(self, *args, **kwargs):
         if os.path.exists(self.body_path):
             os.remove(self.body_path)
@@ -231,6 +232,7 @@ class Contest(db.Document):
         ]
     }
 
+
     @classmethod
     def post_save(cls, sender, document, **kwargs):
         if document.result:
@@ -240,10 +242,17 @@ class Contest(db.Document):
         document.result = result_obj
         document.save()
 
+
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):
         if document.result:
             document.result.delete()
+
+
+    def save(self):
+        if not (self.created_at < self.starts_at < self.ends_at):
+            raise ContestDateTimeError()
+        super(Contest, self).save()
 
 
     def is_user_in_contest(self, user_obj):
@@ -270,12 +279,6 @@ class Contest(db.Document):
             self.starts_at = json['starts_at']
         if 'ends_at' in json:
             self.ends_at = json['ends_at']
-
-
-    def save(self):
-        if not (self.created_at < self.starts_at < self.ends_at):
-            raise ContestDateTimeError()
-        super(Contest, self).save()
 
 
     def to_json(self):

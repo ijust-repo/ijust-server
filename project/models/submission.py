@@ -58,6 +58,7 @@ class Submission(db.Document):
             self.filename
         )
 
+
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):
         if os.path.exists(document.data_dir):
