@@ -18,7 +18,3 @@ IJust:
     - /var/www/ijust:/var/www/ijust
     - /tmp:/tmp
     - /var/run/docker.sock:/var/run/docker.sock
-
-IJudge:
-  image: ijudge
-  container_name: ijudgec
