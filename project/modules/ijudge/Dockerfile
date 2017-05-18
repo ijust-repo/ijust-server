@@ -3,19 +3,17 @@ FROM ubuntu:16.04
 MAINTAINER SALAR
 
 RUN apt-get update
-RUN apt-get install -y software-properties-common bc g++ python2.7 python3.5 default-jre default-jdk time
-RUN add-apt-repository ppa:webupd8team/java
-RUN apt-get update && \
-	echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
-	apt-get install -y oracle-java8-installer
-
+RUN apt-get install -y bc time
 RUN useradd restricted_user
 
 RUN mkdir /var/judge
 
-ADD ./scripts/main.sh /var/judge
-RUN chmod a+x /var/judge/main.sh
+ADD ./main.sh /var/judge
+ADD ./language_dependency.sh /var/judge
+ADD ./scripts/ /var/judge/scripts/
 
 WORKDIR /var/judge
+
+RUN /bin/bash language_dependency.sh
 
 CMD ["/bin/bash", "main.sh"]
