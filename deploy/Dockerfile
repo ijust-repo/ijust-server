@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 
 MAINTAINER AminHP
 
-RUN apt-get update
+RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y \
 	build-essential openssl libssl-dev \
 	python python-pip python-dev \
