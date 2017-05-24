@@ -2,7 +2,8 @@
 
 apt-get install -y openssl letsencrypt
 apt-get install -y docker docker.io docker-compose
-apt-get install -y nginx apache2-utils
+apt-get install nginx
+apt-get install -y apache2-utils
 apt-get install -y nodejs nodejs-legacy npm
 
 service nginx stop
